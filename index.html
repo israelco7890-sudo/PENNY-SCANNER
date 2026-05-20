@@ -194,7 +194,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);display:flex
 /* ── BOTTOM SHEET ── */
 .sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:none;}
 .sheet-overlay.open{display:block;}
-.sheet{
+.sheet(
   position:fixed;bottom:0;left:0;right:0;z-index:500;
   background:var(--surface);border-radius:18px 18px 0 0;
   border-top:1px solid var(--border);
@@ -225,12 +225,7 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;hei
 .tg.active{background:var(--bdim);border-color:var(--blue);color:var(--blue);}
 .switch-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;}
 .switch-lbl{font-size:12px;color:var(--mid);}
-.sw-wrap{position:relative;width:44px;height:24px;flex-shrink:0;}
-.sw-wrap input{opacity:0;width:0;height:0;}
-.sw-track{position:absolute;cursor:pointer;inset:0;background:var(--b2);border-radius:24px;transition:.2s;}
-.sw-track:before{content:"";position:absolute;height:16px;width:16px;left:4px;top:4px;background:var(--dim);border-radius:50%;transition:.2s;}
-input:checked+.sw-track{background:var(--gdim);border:1px solid var(--green);}
-input:checked+.sw-track:before{transform:translateX(20px);background:var(--green);}
+.sw-wrap"><input type="checkbox" id="ar-toggle" onchange="toggleAR()"><span class="sw-track"></span></label>
 
 /* keyword chips in sheet */
 .kw-grid{display:flex;flex-wrap:wrap;gap:6px;}
@@ -282,7 +277,6 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
 </head>
 <body>
 
-<!-- TOP BAR -->
 <div class="topbar">
   <div class="logo"><div class="logo-icon">⚡</div>Penny<span>Scanner</span></div>
   <div class="topbar-right">
@@ -291,7 +285,6 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
   </div>
 </div>
 
-<!-- SESSION TABS -->
 <div class="sess-tabs">
   <button class="stab all active" onclick="setSession('all')">🌐 ALL</button>
   <button class="stab pre" onclick="setSession('pre')">🌅 PRE</button>
@@ -299,13 +292,11 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
   <button class="stab after" onclick="setSession('after')">🌙 AFTER</button>
 </div>
 
-<!-- AUTO REFRESH BAR -->
 <div class="ar-bar" id="ar-bar">
   <span>⟳ Auto Refresh פעיל</span>
   <span class="ar-ctr" id="ar-ctr">15s</span>
 </div>
 
-<!-- SORT BAR -->
 <div class="sort-bar">
   <div class="res-count">מציג <strong id="result-num">0</strong> מניות</div>
   <select class="sort-sel" id="sort-by" onchange="sortResults()">
@@ -317,7 +308,6 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
   </select>
 </div>
 
-<!-- STOCK LIST -->
 <div class="stock-list" id="stock-list">
   <div class="empty-state">
     <div class="empty-icon">📡</div>
@@ -325,7 +315,6 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
   </div>
 </div>
 
-<!-- BOTTOM NAV -->
 <div class="bottom-nav">
   <button class="bnav-item active" onclick="showSheet('scan')">
     <div class="ico">🎛️</div>פילטרים
@@ -339,10 +328,8 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
   </button>
 </div>
 
-<!-- ── SHEET OVERLAY ── -->
 <div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
 
-<!-- ── FILTERS SHEET ── -->
 <div class="sheet" id="sheet-scan">
   <div class="sheet-handle"></div>
   <div class="sheet-header">
@@ -422,7 +409,6 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
   </div>
 </div>
 
-<!-- ── KEYWORDS SHEET ── -->
 <div class="sheet" id="sheet-kw">
   <div class="sheet-handle"></div>
   <div class="sheet-header">
@@ -454,7 +440,6 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
   </div>
 </div>
 
-<!-- ── ALERTS SHEET ── -->
 <div class="sheet" id="sheet-alert">
   <div class="sheet-handle"></div>
   <div class="sheet-header">
@@ -511,7 +496,6 @@ function renderKws(){
         ${k.w}<span class="chip-x" onclick="rmKw(event,'${cat}',${i})"> ✕</span>
       </div>`).join('');
   });
-  // update badge
   const total=Object.values(kws).flat().filter(k=>k.on).length;
   const badge=document.getElementById('kw-badge');
   badge.textContent=total;badge.style.display=total?'block':'none';
@@ -573,32 +557,18 @@ function startAR(){arCd=15;updAR();if(arTimer)clearInterval(arTimer);arTimer=set
 function updAR(){document.getElementById('ar-ctr').textContent=arCd+'s';}
 
 // ── NOTIF ─────────────────────────────────────────────────────────
-let alertedSet=new Set();
 function reqNotif(){
   if(!('Notification' in window)) return;
-  
-  // אם כבר יש אישור, לחיצה נוספת תנקה את הזיכרון ותכבה את האייקון
-  if(Notification.permission === 'granted'){
-    alertedSet.clear();
-    setNotifIcon(false);
-    return;
-  }
-  
-  // הגרסה הסינכרונית שעובדת מושלם גם במחשב וגם בנייד
+  if(Notification.permission === 'granted'){alertedSet.clear();setNotifIcon(false);return;}
   try {
     Notification.requestPermission(function(p) {
       setNotifIcon(p === 'granted');
-      if(p === 'granted'){
-        setTimeout(() => pushN('⚡ PennyScanner', 'התראות מופעלות!', ''), 500);
-      }
+      if(p === 'granted'){setTimeout(() => pushN('⚡ PennyScanner', 'התראות מופעלות!', ''), 500);}
     });
   } catch(e) {
-    // לגיבוי במקרה שהדפדפן תומך רק ב-Promise המודרני (בעיקר דפדפנים ישנים במחשב)
     Notification.requestPermission().then(function(p) {
       setNotifIcon(p === 'granted');
-      if(p === 'granted'){
-        setTimeout(() => pushN('⚡ PennyScanner', 'התראות מופעלות!', ''), 500);
-      }
+      if(p === 'granted'){setTimeout(() => pushN('⚡ PennyScanner', 'התראות מופעלות!', ''), 500);}
     });
   }
 }
@@ -670,7 +640,7 @@ const ALL_STOCKS=[
   {ticker:"MTVA",sess:"after",price:1.81,chg:63.06,chgd:0.70,vol:52.9,mcap:6.2,float:5.1,short:8.3,news:"any",headlines:[]},
 ];
 
-let currentResults=[],seenSet=new Set();
+let currentResults=[],seenSet=new Set(),alertedSet=new Set();
 
 // ── SCAN ──────────────────────────────────────────────────────────
 function runScan(){
@@ -711,6 +681,18 @@ function applyFilters(){
   currentResults=pool;
   sortResults(true);
   checkAlerts(currentResults);
+
+  // 💾 שמירת ערכי הפילטרים בזיכרון הדפדפן בכל שינוי
+  const config = {
+    fmin: document.getElementById('fmin').value, fmax: document.getElementById('fmax').value,
+    cmin: document.getElementById('cmin').value, cmax: document.getElementById('cmax').value,
+    vmin: document.getElementById('vmin').value, vmax: document.getElementById('vmax').value,
+    pmin: document.getElementById('pmin').value, pmax: document.getElementById('pmax').value,
+    mmin: document.getElementById('mmin').value, mmax: document.getElementById('mmax').value,
+    smax: document.getElementById('smax').value,
+    arToggle: document.getElementById('ar-toggle').checked
+  };
+  localStorage.setItem('scanner_config', JSON.stringify(config));
 }
 
 function sortResults(skip){
@@ -796,6 +778,36 @@ function toggleNews(i){
   const o=p.classList.contains('open');
   p.classList.toggle('open',!o);if(t)t.classList.toggle('open',!o);
 }
+
+// ── BOOTSTRAP / STORAGE LOAD ─────────────────────────────────────
+function updateInputsDisplay() {
+  document.getElementById('fmin-v').textContent = parseFloat(document.getElementById('fmin').value).toFixed(1) + 'M';
+  document.getElementById('fmax-v').textContent = parseFloat(document.getElementById('fmax').value).toFixed(1) + 'M';
+  document.getElementById('smax-v').textContent = document.getElementById('smax').value + '%';
+}
+
+(function loadSavedConfig(){
+  const savedConfig = localStorage.getItem('scanner_config');
+  if(savedConfig){
+    const config = JSON.parse(savedConfig);
+    if(config.fmin) document.getElementById('fmin').value = config.fmin;
+    if(config.fmax) document.getElementById('fmax').value = config.fmax;
+    if(config.cmin) document.getElementById('cmin').value = config.cmin;
+    if(config.cmax) document.getElementById('cmax').value = config.cmax;
+    if(config.vmin) document.getElementById('vmin').value = config.vmin;
+    if(config.vmax) document.getElementById('vmax').value = config.vmax;
+    if(config.pmin) document.getElementById('pmin').value = config.pmin;
+    if(config.pmax) document.getElementById('pmax').value = config.pmax;
+    if(config.mmin) document.getElementById('mmin').value = config.mmin;
+    if(config.mmax) document.getElementById('mmax').value = config.mmax;
+    if(config.smax) document.getElementById('smax').value = config.smax;
+    if(config.arToggle !== undefined) {
+      document.getElementById('ar-toggle').checked = config.arToggle;
+      document.getElementById('ar-bar').classList.toggle('show', config.arToggle);
+    }
+    updateInputsDisplay();
+  }
+})();
 
 setNotifIcon(typeof Notification!=='undefined'&&Notification.permission==='granted');
 setTimeout(runScan,300);
