@@ -2,7 +2,7 @@
 <html lang="he">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PennyScanner Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
 <style>
@@ -53,6 +53,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);display:flex
   cursor:pointer;transition:all .15s;flex-shrink:0;
   letter-spacing:.5px;
 }
+.scan-fab:active{transform:scale(.95);}
 .scan-fab.scanning{background:var(--b2);color:var(--dim);pointer-events:none;}
 
 /* ── SESSION TABS ── */
@@ -196,15 +197,26 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);display:flex
 .sheet{
   position:fixed;bottom:0;left:0;right:0;z-index:500;
   background:var(--surface);border-radius:18px 18px 0 0;
-  border-top:1px solid var(--border);max-height:88vh;
+  border-top:1px solid var(--border);
+  max-height:80vh;display:flex;flex-direction:column;
   transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
 }
 .sheet.open{transform:translateY(0);}
-.sheet-handle{width:36px;height:4px;background:var(--b2);border-radius:2px;margin:12px auto 0;}
-.sheet-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;}
+.sheet-handle{width:36px;height:4px;background:var(--b2);border-radius:2px;margin:12px auto 0;flex-shrink:0;}
+.sheet-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;flex-shrink:0;}
 .sheet-title{font-family:var(--sans);font-size:15px;font-weight:800;}
 .sheet-close{background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;padding:0 4px;line-height:1;}
-.sheet-body{overflow-y:auto;padding:0 16px 24px;display:flex;flex-direction:column;gap:18px;height:calc(100% - 50px);}
+
+/* תוקן: הגדרת גלילה עצמאית ונקייה בתוך התיבה */
+.sheet-body{
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:0 16px 30px;
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  flex:1;
+}
 
 /* sheet sections */
 .sec-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:2px;}
@@ -234,7 +246,7 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
 .kw-grid{display:flex;flex-wrap:wrap;gap:6px;}
 .kw-chip{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid;transition:opacity .15s;user-select:none;}
 .kw-chip.off{opacity:.3;}
-.chip-x{opacity:.5;font-size:11px;}
+.chip-x{opacity:.5;font-size:11px;padding-left:4px;}
 .kw-chip:active .chip-x{opacity:1;}
 .c-bio{background:#0f1e30;border-color:#60a5fa;color:#60a5fa;}
 .c-reg{background:#0d1e15;border-color:#4ade80;color:#4ade80;}
@@ -242,7 +254,7 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
 .c-tech{background:#1a1530;border-color:#a78bfa;color:#a78bfa;}
 .c-gov{background:#1e1000;border-color:#fb923c;color:#fb923c;}
 .c-short{background:#1e0808;border-color:#f87171;color:#f87171;}
-.kw-cat-title{font-size:10px;font-weight:700;color:var(--mid);margin-bottom:4px;}
+.kw-cat-title{font-size:10px;font-weight:700;color:var(--mid);margin-bottom:6px;margin-top:4px;}
 .add-kw-row{display:flex;gap:8px;margin-top:4px;}
 .cat-sel{background:var(--s2);border:1px solid var(--b2);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px;border-radius:8px;outline:none;cursor:pointer;}
 .kw-inp{flex:1;background:var(--s2);border:1px solid var(--b2);color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 10px;border-radius:8px;outline:none;}
@@ -319,14 +331,14 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
 </div>
 
 <div class="bottom-nav">
-  <button class="bnav-item active" id="btn-nav-scan" onclick="showSheet('scan')">
+  <button class="bnav-item active" id="nav-scan" onclick="showSheet('scan')">
     <div class="ico">🎛️</div>פילטרים
   </button>
-  <button class="bnav-item" id="btn-nav-kw" onclick="showSheet('kw')">
+  <button class="bnav-item" id="nav-kw" onclick="showSheet('kw')">
     <div class="ico">🔑</div>מילות מפתח
     <div class="badge-count" id="kw-badge">0</div>
   </button>
-  <button class="bnav-item" id="btn-nav-alert" onclick="showSheet('alert')">
+  <button class="bnav-item" id="nav-alert" onclick="showSheet('alert')">
     <div class="ico">🔔</div>התראות
   </button>
 </div>
@@ -344,53 +356,53 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
       <div class="sec-title">Float (M)</div>
       <div class="filter-row" style="margin-top:8px">
         <div class="fl"><span>Min Float</span><span class="fv" id="fmin-v">0.1M</span></div>
-        <input type="range" id="fmin" min="0.1" max="30" step="0.1" value="0.1">
+        <input type="range" id="fmin" min="0.1" max="30" step="0.1" value="0.1" oninput="saveFilters()">
       </div>
       <div class="filter-row" style="margin-top:10px">
         <div class="fl"><span>Max Float</span><span class="fv" id="fmax-v">20M</span></div>
-        <input type="range" id="fmax" min="1" max="60" step="0.5" value="20">
+        <input type="range" id="fmax" min="1" max="60" step="0.5" value="20" oninput="saveFilters()">
       </div>
     </div>
     <div>
       <div class="sec-title">% שינוי</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN %</label><input type="number" class="ni" id="cmin" value="20"></div>
-        <div class="ri"><label>MAX %</label><input type="number" class="ni" id="cmax" value="5000"></div>
+        <div class="ri"><label>MIN %</label><input type="number" class="ni" id="cmin" value="20" onchange="saveFilters()"></div>
+        <div class="ri"><label>MAX %</label><input type="number" class="ni" id="cmax" value="5000" onchange="saveFilters()"></div>
       </div>
     </div>
     <div>
       <div class="sec-title">שינוי ($)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="cdmin" value="0.3" step="0.1"></div>
-        <div class="ri"><label>MAX $</label><input type="number" class="ni" id="cdmax" value="50"></div>
+        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="cdmin" value="0.3" step="0.1" onchange="saveFilters()"></div>
+        <div class="ri"><label>MAX $</label><input type="number" class="ni" id="cdmax" value="50" onchange="saveFilters()"></div>
       </div>
     </div>
     <div>
       <div class="sec-title">Volume (M)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN</label><input type="number" class="ni" id="vmin" value="1" step="0.5"></div>
-        <div class="ri"><label>MAX</label><input type="number" class="ni" id="vmax" value="500" step="10"></div>
+        <div class="ri"><label>MIN</label><input type="number" class="ni" id="vmin" value="1" step="0.5" onchange="saveFilters()"></div>
+        <div class="ri"><label>MAX</label><input type="number" class="ni" id="vmax" value="500" step="10" onchange="saveFilters()"></div>
       </div>
     </div>
     <div>
       <div class="sec-title">מחיר ($)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="pmin" value="0.1" step="0.1"></div>
-        <div class="ri"><label>MAX $</label><input type="number" class="ni" id="pmax" value="20"></div>
+        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="pmin" value="0.1" step="0.1" onchange="saveFilters()"></div>
+        <div class="ri"><label>MAX $</label><input type="number" class="ni" id="pmax" value="20" onchange="saveFilters()"></div>
       </div>
     </div>
     <div>
       <div class="sec-title">Market Cap (M)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN</label><input type="number" class="ni" id="mmin" value="1"></div>
-        <div class="ri"><label>MAX</label><input type="number" class="ni" id="mmax" value="200"></div>
+        <div class="ri"><label>MIN</label><input type="number" class="ni" id="mmin" value="1" onchange="saveFilters()"></div>
+        <div class="ri"><label>MAX</label><input type="number" class="ni" id="mmax" value="200" onchange="saveFilters()"></div>
       </div>
     </div>
     <div>
       <div class="sec-title">Short Interest Max</div>
       <div class="filter-row" style="margin-top:8px">
         <div class="fl"><span>Max Short %</span><span class="fv" id="smax-v">50%</span></div>
-        <input type="range" id="smax" min="0" max="100" step="1" value="50">
+        <input type="range" id="smax" min="0" max="100" step="1" value="50" oninput="saveFilters()">
       </div>
     </div>
     <div>
@@ -452,19 +464,19 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
   <div class="sheet-body">
     <div>
       <div class="sec-title">סינון התראות</div>
-      <div class="am-row"><span>שלח רק על מניות עם KW</span><input type="checkbox" class="am-chk" id="al-kw" checked></div>
-      <div class="am-row"><span>שלח רק על מניות עם חדשות</span><input type="checkbox" class="am-chk" id="al-news"></div>
+      <div class="am-row"><span>שלח רק על מניות עם KW</span><input type="checkbox" class="am-chk" id="al-kw" checked onchange="saveAlertSettings()"></div>
+      <div class="am-row"><span>שלח רק על מניות עם חדשות</span><input type="checkbox" class="am-chk" id="al-news" onchange="saveAlertSettings()"></div>
     </div>
     <div>
       <div class="sec-title">סף מינימום</div>
-      <div class="am-row"><span>מינ׳ % שינוי</span><input type="number" class="am-ni" id="al-chg" value="30"></div>
-      <div class="am-row"><span>מינ׳ Volume (M)</span><input type="number" class="am-ni" id="al-vol" value="3" step="0.5"></div>
+      <div class="am-row"><span>מינ׳ % שינוי</span><input type="number" class="am-ni" id="al-chg" value="30" onchange="saveAlertSettings()"></div>
+      <div class="am-row"><span>מינ׳ Volume (M)</span><input type="number" class="am-ni" id="al-vol" value="3" step="0.5" onchange="saveAlertSettings()"></div>
     </div>
     <div>
       <div class="sec-title">Session</div>
-      <div class="am-row"><span>🌅 Pre-Market</span><input type="checkbox" class="am-chk" id="al-pre" checked></div>
-      <div class="am-row"><span>📈 Regular Hours</span><input type="checkbox" class="am-chk" id="al-reg" checked></div>
-      <div class="am-row"><span>🌙 After Hours</span><input type="checkbox" class="am-chk" id="al-after" checked></div>
+      <div class="am-row"><span>🌅 Pre-Market</span><input type="checkbox" class="am-chk" id="al-pre" checked onchange="saveAlertSettings()"></div>
+      <div class="am-row"><span>📈 Regular Hours</span><input type="checkbox" class="am-chk" id="al-reg" checked onchange="saveAlertSettings()"></div>
+      <div class="am-row"><span>🌙 After Hours</span><input type="checkbox" class="am-chk" id="al-after" checked onchange="saveAlertSettings()"></div>
     </div>
     <div>
       <div class="sec-title">Push Notifications</div>
@@ -478,7 +490,7 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
 <div class="toast-log" id="toast-log"></div>
 
 <script>
-// ── KEYWORDS ─────────────────────────────────────────────────────
+// ── KEYWORDS DATA & LOCAL STORAGE ─────────────────────────────────
 const KW_DEF={
   bio:['phase 1','phase 2','phase 3','phase ii','phase iii','clinical trial','cancer','tumor','oncology','rare disease','orphan drug','biotech','pivotal','efficacy','data readout'],
   reg:['fda','fda approval','pdufa','nda','bla','ind','breakthrough','fast track','priority review','clearance','accelerated approval','510k'],
@@ -489,7 +501,18 @@ const KW_DEF={
 };
 const CAT_CLS={bio:'c-bio',reg:'c-reg',ma:'c-ma',tech:'c-tech',gov:'c-gov',short:'c-short'};
 let kws={};
-Object.keys(KW_DEF).forEach(c=>{kws[c]=KW_DEF[c].map(w=>({w,on:true}));});
+
+// טעינה או אתחול מילות מפתח מ-LocalStorage
+if(localStorage.getItem('ps_kws')){
+  try { kws = JSON.parse(localStorage.getItem('ps_kws')); } catch(e) { initKws(); }
+} else { initKws(); }
+
+function initKws(){
+  kws={};
+  Object.keys(KW_DEF).forEach(c=>{kws[c]=KW_DEF[c].map(w=>({w,on:true}));});
+  saveKws();
+}
+function saveKws(){ localStorage.setItem('ps_kws', JSON.stringify(kws)); }
 
 function renderKws(){
   Object.keys(kws).forEach(cat=>{
@@ -503,13 +526,13 @@ function renderKws(){
   const badge=document.getElementById('kw-badge');
   badge.textContent=total;badge.style.display=total?'block':'none';
 }
-function toggleKw(cat,i){kws[cat][i].on=!kws[cat][i].on;renderKws();}
-function rmKw(e,cat,i){e.stopPropagation();kws[cat].splice(i,1);renderKws();}
+function toggleKw(cat,i){kws[cat][i].on=!kws[cat][i].on;saveKws();renderKws();applyFilters();}
+function rmKw(e,cat,i){e.stopPropagation();kws[cat].splice(i,1);saveKws();renderKws();applyFilters();}
 function addKw(){
   const cat=document.getElementById('new-kw-cat').value;
   const val=document.getElementById('new-kw-inp').value.trim().toLowerCase();
   if(!val)return;kws[cat].push({w:val,on:true});
-  document.getElementById('new-kw-inp').value='';renderKws();
+  document.getElementById('new-kw-inp').value='';saveKws();renderKws();applyFilters();
 }
 function getActiveKws(){return Object.values(kws).flat().filter(k=>k.on).map(k=>k.w);}
 function matchKws(headlines){
@@ -517,9 +540,8 @@ function matchKws(headlines){
   const text=(headlines||[]).join(' ').toLowerCase();
   return active.filter(kw=>text.includes(kw));
 }
-renderKws();
 
-// ── BOTTOM SHEET ──────────────────────────────────────────────────
+// ── BOTTOM SHEET MANAGEMENT ─────────────────────────────────────────
 let currentSheet=null;
 function showSheet(name){
   closeSheet(false);
@@ -528,7 +550,7 @@ function showSheet(name){
   sh.classList.add('open');currentSheet=name;
   
   document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
-  const navBtn = document.getElementById('btn-nav-'+name);
+  const navBtn = document.getElementById('nav-'+name);
   if(navBtn) navBtn.classList.add('active');
   
   if(name==='kw')renderKws();
@@ -539,20 +561,116 @@ function closeSheet(animate=true){
   currentSheet=null;
 }
 
-// ── SESSION ───────────────────────────────────────────────────────
+// ── SESSION MANAGEMENT ─────────────────────────────────────────────
 let currentSession='all';
 function setSession(s){
   currentSession=s;
   document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
   document.querySelector('.stab.'+s).classList.add('active');
+  applyFilters();
 }
 
-// ── SLIDERS ───────────────────────────────────────────────────────
-document.getElementById('fmin').addEventListener('input',e=>{document.getElementById('fmin-v').textContent=parseFloat(e.target.value).toFixed(1)+'M';});
-document.getElementById('fmax').addEventListener('input',e=>{document.getElementById('fmax-v').textContent=parseFloat(e.target.value).toFixed(1)+'M';});
-document.getElementById('smax').addEventListener('input',e=>{document.getElementById('smax-v').textContent=e.target.value+'%';});
+// ── SAVE & LOAD FILTERS (LOCAL STORAGE) ────────────────────────────
+function saveFilters(){
+  const filters = {
+    fmin: document.getElementById('fmin').value,
+    fmax: document.getElementById('fmax').value,
+    cmin: document.getElementById('cmin').value,
+    cmax: document.getElementById('cmax').value,
+    cdmin: document.getElementById('cdmin').value,
+    cdmax: document.getElementById('cdmax').value,
+    vmin: document.getElementById('vmin').value,
+    vmax: document.getElementById('vmax').value,
+    pmin: document.getElementById('pmin').value,
+    pmax: document.getElementById('pmax').value,
+    mmin: document.getElementById('mmin').value,
+    mmax: document.getElementById('mmax').value,
+    smax: document.getElementById('smax').value,
+    news: newsFilter,
+    ar: document.getElementById('ar-toggle').checked
+  };
+  localStorage.setItem('ps_filters', JSON.stringify(filters));
+  updateSliderLabels();
+  applyFilters();
+}
+
+function loadFilters(){
+  const stored = localStorage.getItem('ps_filters');
+  if(!stored) { updateSliderLabels(); return; }
+  try {
+    const f = JSON.parse(stored);
+    document.getElementById('fmin').value = f.fmin || 0.1;
+    document.getElementById('fmax').value = f.fmax || 20;
+    document.getElementById('cmin').value = f.cmin || 20;
+    document.getElementById('cmax').value = f.cmax || 5000;
+    document.getElementById('cdmin').value = f.cdmin || 0.3;
+    document.getElementById('cdmax').value = f.cdmax || 50;
+    document.getElementById('vmin').value = f.vmin || 1;
+    document.getElementById('vmax').value = f.vmax || 500;
+    document.getElementById('pmin').value = f.pmin || 0.1;
+    document.getElementById('pmax').value = f.pmax || 20;
+    document.getElementById('mmin').value = f.mmin || 1;
+    document.getElementById('mmax').value = f.mmax || 200;
+    document.getElementById('smax').value = f.smax || 50;
+    newsFilter = f.news || 'any';
+    document.getElementById('ar-toggle').checked = f.ar || false;
+    
+    document.querySelectorAll('[data-news]').forEach(x=>x.classList.remove('active'));
+    const activeNewsBtn = document.querySelector(`[data-news="${newsFilter}"]`);
+    if(activeNewsBtn) activeNewsBtn.classList.add('active');
+    
+    toggleAR();
+  } catch(e) { console.error(e); }
+  updateSliderLabels();
+}
+
+function updateSliderLabels(){
+  document.getElementById('fmin-v').textContent=parseFloat(document.getElementById('fmin').value).toFixed(1)+'M';
+  document.getElementById('fmax-v').textContent=parseFloat(document.getElementById('fmax').value).toFixed(1)+'M';
+  document.getElementById('smax-v').textContent=document.getElementById('smax').value+'%';
+}
+
+// מאזינים מורחבים לסליידרים
+document.getElementById('fmin').addEventListener('input', updateSliderLabels);
+document.getElementById('fmax').addEventListener('input', updateSliderLabels);
+document.getElementById('smax').addEventListener('input', updateSliderLabels);
+
 let newsFilter='any';
-document.querySelectorAll('[data-news]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-news]').forEach(x=>x.classList.remove('active'));b.classList.add('active');newsFilter=b.dataset.news;}));
+document.querySelectorAll('[data-news]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-news]').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  newsFilter=b.dataset.news;
+  saveFilters();
+}));
+
+// ── ALERTS SETTINGS (LOCAL STORAGE) ─────────────────────────────────
+function saveAlertSettings(){
+  const alerts = {
+    kw: document.getElementById('al-kw').checked,
+    news: document.getElementById('al-news').checked,
+    chg: document.getElementById('al-chg').value,
+    vol: document.getElementById('al-vol').value,
+    pre: document.getElementById('al-pre').checked,
+    reg: document.getElementById('al-reg').checked,
+    after: document.getElementById('al-after').checked
+  };
+  localStorage.setItem('ps_alerts', JSON.stringify(alerts));
+}
+
+function loadAlertSettings(){
+  const stored = localStorage.getItem('ps_alerts');
+  if(!stored) return;
+  try {
+    const a = JSON.parse(stored);
+    document.getElementById('al-kw').checked = a.kw !== undefined ? a.kw : true;
+    document.getElementById('al-news').checked = a.news !== undefined ? a.news : false;
+    document.getElementById('al-chg').value = a.chg || 30;
+    document.getElementById('al-vol').value = a.vol || 3;
+    document.getElementById('al-pre').checked = a.pre !== undefined ? a.pre : true;
+    document.getElementById('al-reg').checked = a.reg !== undefined ? a.reg : true;
+    document.getElementById('al-after').checked = a.after !== undefined ? a.after : true;
+  } catch(e) {}
+}
 
 // ── AUTO REFRESH ─────────────────────────────────────────────────
 let arTimer=null,arCd=0;
@@ -564,22 +682,14 @@ function toggleAR(){
 function startAR(){arCd=15;updAR();if(arTimer)clearInterval(arTimer);arTimer=setInterval(()=>{arCd--;updAR();if(arCd<=0){arCd=15;applyFilters();}},1000);}
 function updAR(){document.getElementById('ar-ctr').textContent=arCd+'s';}
 
-// ── NOTIF ─────────────────────────────────────────────────────────
+// ── NOTIFICATIONS SYSTEM ──────────────────────────────────────────
 let alertedSet=new Set();
-function reqNotif(){
-  if(!('Notification' in window)) return;
-  if(Notification.permission === 'granted'){alertedSet.clear();setNotifIcon(false);return;}
-  try {
-    Notification.requestPermission(function(p) {
-      setNotifIcon(p === 'granted');
-      if(p === 'granted'){setTimeout(() => pushN('⚡ PennyScanner', 'התראות מופעלות!', ''), 500);}
-    });
-  } catch(e) {
-    Notification.requestPermission().then(function(p) {
-      setNotifIcon(p === 'granted');
-      if(p === 'granted'){setTimeout(() => pushN('⚡ PennyScanner', 'התראות מופעלות!', ''), 500);}
-    });
-  }
+async function reqNotif(){
+  if(!('Notification'in window))return;
+  if(Notification.permission==='granted'){alertedSet.clear();setNotifIcon(false);return;}
+  const p=await Notification.requestPermission();
+  setNotifIcon(p==='granted');
+  if(p==='granted'){setTimeout(()=>pushN('⚡ PennyScanner','התראות מופעלות!',''),500);}
 }
 function setNotifIcon(on){
   const b=document.getElementById('notif-icon');
@@ -625,7 +735,7 @@ function checkAlerts(results){
   });
 }
 
-// ── DATA ──────────────────────────────────────────────────────────
+// ── MARKET DATA ───────────────────────────────────────────────────
 const ALL_STOCKS=[
   {ticker:"ILUS",sess:"pre",price:0.72,chg:220.8,chgd:0.50,vol:88.4,mcap:5.2,float:1.2,short:3.1,news:"1d",headlines:["ILUS Government Emergency Services Grant Awarded — AI Defense Platform Contract","DoD Military Award for AI Emergency Response Technology"]},
   {ticker:"AMST",sess:"pre",price:2.37,chg:201.49,chgd:1.58,vol:73.0,mcap:6.1,float:1.8,short:4.2,news:"1d",headlines:["Amesite Phase 2 AI Platform DoD Government Grant Award","AMST Defense Training Technology Contract Signed"]},
@@ -651,7 +761,7 @@ const ALL_STOCKS=[
 
 let currentResults=[],seenSet=new Set();
 
-// ── SCAN ──────────────────────────────────────────────────────────
+// ── SCAN OPERATORS ─────────────────────────────────────────────────
 function runScan(){
   const btn=document.getElementById('scan-btn');
   btn.classList.add('scanning');btn.textContent='◉ סורק...';
@@ -690,17 +800,6 @@ function applyFilters(){
   currentResults=pool;
   sortResults(true);
   checkAlerts(currentResults);
-
-  const config = {
-    fmin: document.getElementById('fmin').value, fmax: document.getElementById('fmax').value,
-    cmin: document.getElementById('cmin').value, cmax: document.getElementById('cmax').value,
-    vmin: document.getElementById('vmin').value, vmax: document.getElementById('vmax').value,
-    pmin: document.getElementById('pmin').value, pmax: document.getElementById('pmax').value,
-    mmin: document.getElementById('mmin').value, mmax: document.getElementById('mmax').value,
-    smax: document.getElementById('smax').value,
-    arToggle: document.getElementById('ar-toggle').checked
-  };
-  localStorage.setItem('scanner_config', JSON.stringify(config));
 }
 
 function sortResults(skip){
@@ -710,7 +809,7 @@ function sortResults(skip){
   renderResults();
 }
 
-// ── RENDER ────────────────────────────────────────────────────────
+// ── RENDER ENGINE ──────────────────────────────────────────────────
 const SESS_PILL_CLS={pre:'sp-pre',reg:'sp-reg',after:'sp-after'};
 const SESS_LBL={pre:'PRE',reg:'REG',after:'AFTER'};
 const T_CLS={pre:'t-pre',reg:'t-reg',after:'t-after'};
@@ -787,34 +886,14 @@ function toggleNews(i){
   p.classList.toggle('open',!o);if(t)t.classList.toggle('open',!o);
 }
 
-// טעינת הגדרות מחדש
-(function loadSavedConfig(){
-  const savedConfig = localStorage.getItem('scanner_config');
-  if(savedConfig){
-    const config = JSON.parse(savedConfig);
-    if(config.fmin) document.getElementById('fmin').value = config.fmin;
-    if(config.fmax) document.getElementById('fmax').value = config.fmax;
-    if(config.cmin) document.getElementById('cmin').value = config.cmin;
-    if(config.cmax) document.getElementById('cmax').value = config.cmax;
-    if(config.vmin) document.getElementById('vmin').value = config.vmin;
-    if(config.vmax) document.getElementById('vmax').value = config.vmax;
-    if(config.pmin) document.getElementById('pmin').value = config.pmin;
-    if(config.pmax) document.getElementById('pmax').value = config.pmax;
-    if(config.mmin) document.getElementById('mmin').value = config.mmin;
-    if(config.mmax) document.getElementById('mmax').value = config.mmax;
-    if(config.smax) document.getElementById('smax').value = config.smax;
-    if(config.arToggle !== undefined) {
-      document.getElementById('ar-toggle').checked = config.arToggle;
-      document.getElementById('ar-bar').classList.toggle('show', config.arToggle);
-    }
-    document.getElementById('fmin-v').textContent = parseFloat(document.getElementById('fmin').value).toFixed(1) + 'M';
-    document.getElementById('fmax-v').textContent = parseFloat(document.getElementById('fmax').value).toFixed(1) + 'M';
-    document.getElementById('smax-v').textContent = document.getElementById('smax').value + '%';
-  }
-})();
-
-setNotifIcon(typeof Notification!=='undefined'&&Notification.permission==='granted');
-setTimeout(runScan,300);
+// ── INITIALIZATION ────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', ()=>{
+  loadFilters();
+  loadAlertSettings();
+  renderKws();
+  setNotifIcon(typeof Notification!=='undefined'&&Notification.permission==='granted');
+  setTimeout(runScan,300);
+});
 </script>
 </body>
 </html>
