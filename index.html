@@ -574,12 +574,33 @@ function updAR(){document.getElementById('ar-ctr').textContent=arCd+'s';}
 
 // ── NOTIF ─────────────────────────────────────────────────────────
 let alertedSet=new Set();
-async function reqNotif(){
-  if(!('Notification'in window))return;
-  if(Notification.permission==='granted'){alertedSet.clear();setNotifIcon(false);return;}
-  const p=await Notification.requestPermission();
-  setNotifIcon(p==='granted');
-  if(p==='granted'){setTimeout(()=>pushN('⚡ PennyScanner','התראות מופעלות!',''),500);}
+function reqNotif(){
+  if(!('Notification' in window)) return;
+  
+  // אם כבר יש אישור, לחיצה נוספת תנקה את הזיכרון ותכבה את האייקון
+  if(Notification.permission === 'granted'){
+    alertedSet.clear();
+    setNotifIcon(false);
+    return;
+  }
+  
+  // הגרסה הסינכרונית שעובדת מושלם גם במחשב וגם בנייד
+  try {
+    Notification.requestPermission(function(p) {
+      setNotifIcon(p === 'granted');
+      if(p === 'granted'){
+        setTimeout(() => pushN('⚡ PennyScanner', 'התראות מופעלות!', ''), 500);
+      }
+    });
+  } catch(e) {
+    // לגיבוי במקרה שהדפדפן תומך רק ב-Promise המודרני (בעיקר דפדפנים ישנים במחשב)
+    Notification.requestPermission().then(function(p) {
+      setNotifIcon(p === 'granted');
+      if(p === 'granted'){
+        setTimeout(() => pushN('⚡ PennyScanner', 'התראות מופעלות!', ''), 500);
+      }
+    });
+  }
 }
 function setNotifIcon(on){
   const b=document.getElementById('notif-icon');
