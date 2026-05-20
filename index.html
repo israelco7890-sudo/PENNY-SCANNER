@@ -53,7 +53,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);display:flex
   cursor:pointer;transition:all .15s;flex-shrink:0;
   letter-spacing:.5px;
 }
-.scan-fab:active{transform:scale(.95);}
 .scan-fab.scanning{background:var(--b2);color:var(--dim);pointer-events:none;}
 
 /* ── SESSION TABS ── */
@@ -194,11 +193,10 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);display:flex
 /* ── BOTTOM SHEET ── */
 .sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:none;}
 .sheet-overlay.open{display:block;}
-.sheet(
+.sheet{
   position:fixed;bottom:0;left:0;right:0;z-index:500;
   background:var(--surface);border-radius:18px 18px 0 0;
-  border-top:1px solid var(--border);
-  max-height:88vh;display:flex;flex-direction:column;
+  border-top:1px solid var(--border);max-height:88vh;
   transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
 }
 .sheet.open{transform:translateY(0);}
@@ -206,7 +204,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);display:flex
 .sheet-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;}
 .sheet-title{font-family:var(--sans);font-size:15px;font-weight:800;}
 .sheet-close{background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;padding:0 4px;line-height:1;}
-.sheet-body{overflow-y:auto;padding:0 16px 24px;display:flex;flex-direction:column;gap:18px;flex:1;}
+.sheet-body{overflow-y:auto;padding:0 16px 24px;display:flex;flex-direction:column;gap:18px;height:calc(100% - 50px);}
 
 /* sheet sections */
 .sec-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:2px;}
@@ -225,7 +223,12 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;hei
 .tg.active{background:var(--bdim);border-color:var(--blue);color:var(--blue);}
 .switch-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;}
 .switch-lbl{font-size:12px;color:var(--mid);}
-.sw-wrap"><input type="checkbox" id="ar-toggle" onchange="toggleAR()"><span class="sw-track"></span></label>
+.sw-wrap{position:relative;width:44px;height:24px;flex-shrink:0;}
+.sw-wrap input{opacity:0;width:0;height:0;}
+.sw-track{position:absolute;cursor:pointer;inset:0;background:var(--b2);border-radius:24px;transition:.2s;}
+.sw-track:before{content:"";position:absolute;height:16px;width:16px;left:4px;top:4px;background:var(--dim);border-radius:50%;transition:.2s;}
+input:checked+.sw-track{background:var(--gdim);border:1px solid var(--green);}
+input:checked+.sw-track:before{transform:translateX(20px);background:var(--green);}
 
 /* keyword chips in sheet */
 .kw-grid{display:flex;flex-wrap:wrap;gap:6px;}
@@ -316,14 +319,14 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;hei
 </div>
 
 <div class="bottom-nav">
-  <button class="bnav-item active" onclick="showSheet('scan')">
+  <button class="bnav-item active" id="btn-nav-scan" onclick="showSheet('scan')">
     <div class="ico">🎛️</div>פילטרים
   </button>
-  <button class="bnav-item" onclick="showSheet('kw')">
+  <button class="bnav-item" id="btn-nav-kw" onclick="showSheet('kw')">
     <div class="ico">🔑</div>מילות מפתח
     <div class="badge-count" id="kw-badge">0</div>
   </button>
-  <button class="bnav-item" onclick="showSheet('alert')">
+  <button class="bnav-item" id="btn-nav-alert" onclick="showSheet('alert')">
     <div class="ico">🔔</div>התראות
   </button>
 </div>
@@ -523,6 +526,11 @@ function showSheet(name){
   document.getElementById('sheet-overlay').classList.add('open');
   const sh=document.getElementById('sheet-'+name);
   sh.classList.add('open');currentSheet=name;
+  
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
+  const navBtn = document.getElementById('btn-nav-'+name);
+  if(navBtn) navBtn.classList.add('active');
+  
   if(name==='kw')renderKws();
 }
 function closeSheet(animate=true){
@@ -557,6 +565,7 @@ function startAR(){arCd=15;updAR();if(arTimer)clearInterval(arTimer);arTimer=set
 function updAR(){document.getElementById('ar-ctr').textContent=arCd+'s';}
 
 // ── NOTIF ─────────────────────────────────────────────────────────
+let alertedSet=new Set();
 function reqNotif(){
   if(!('Notification' in window)) return;
   if(Notification.permission === 'granted'){alertedSet.clear();setNotifIcon(false);return;}
@@ -640,7 +649,7 @@ const ALL_STOCKS=[
   {ticker:"MTVA",sess:"after",price:1.81,chg:63.06,chgd:0.70,vol:52.9,mcap:6.2,float:5.1,short:8.3,news:"any",headlines:[]},
 ];
 
-let currentResults=[],seenSet=new Set(),alertedSet=new Set();
+let currentResults=[],seenSet=new Set();
 
 // ── SCAN ──────────────────────────────────────────────────────────
 function runScan(){
@@ -682,7 +691,6 @@ function applyFilters(){
   sortResults(true);
   checkAlerts(currentResults);
 
-  // 💾 שמירת ערכי הפילטרים בזיכרון הדפדפן בכל שינוי
   const config = {
     fmin: document.getElementById('fmin').value, fmax: document.getElementById('fmax').value,
     cmin: document.getElementById('cmin').value, cmax: document.getElementById('cmax').value,
@@ -779,13 +787,7 @@ function toggleNews(i){
   p.classList.toggle('open',!o);if(t)t.classList.toggle('open',!o);
 }
 
-// ── BOOTSTRAP / STORAGE LOAD ─────────────────────────────────────
-function updateInputsDisplay() {
-  document.getElementById('fmin-v').textContent = parseFloat(document.getElementById('fmin').value).toFixed(1) + 'M';
-  document.getElementById('fmax-v').textContent = parseFloat(document.getElementById('fmax').value).toFixed(1) + 'M';
-  document.getElementById('smax-v').textContent = document.getElementById('smax').value + '%';
-}
-
+// טעינת הגדרות מחדש
 (function loadSavedConfig(){
   const savedConfig = localStorage.getItem('scanner_config');
   if(savedConfig){
@@ -805,7 +807,9 @@ function updateInputsDisplay() {
       document.getElementById('ar-toggle').checked = config.arToggle;
       document.getElementById('ar-bar').classList.toggle('show', config.arToggle);
     }
-    updateInputsDisplay();
+    document.getElementById('fmin-v').textContent = parseFloat(document.getElementById('fmin').value).toFixed(1) + 'M';
+    document.getElementById('fmax-v').textContent = parseFloat(document.getElementById('fmax').value).toFixed(1) + 'M';
+    document.getElementById('smax-v').textContent = document.getElementById('smax').value + '%';
   }
 })();
 
