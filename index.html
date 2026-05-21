@@ -574,9 +574,8 @@ function checkAlerts(results){
 
 // Two proxies: corsproxy first, allorigins as fallback
 const PROXIES = [
-  raw => 'https://corsproxy.io/?' + encodeURIComponent(raw),
-  raw => 'https://thingproxy.freeboard.io/fetch/' + encodeURIComponent(raw),
-  raw => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(raw)
+  raw => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(raw),
+  raw => 'https://proxy.cors.sh/' + raw
 ];
 
 // Simple timeout via Promise.race (no AbortSignal — max browser compat)
