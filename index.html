@@ -249,13 +249,13 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
       </div>
       <div class="filter-row" style="margin-top:10px">
         <div class="fl"><span>Max Float</span><span class="fv" id="fmax-v">20M</span></div>
-        <input type="range" id="fmax" min="1" max="60" step="0.5" value="20" oninput="saveFilters()">
+        <input type="range" id="fmax" min="1" max="60" step="0.5" value="60" oninput="saveFilters()">
       </div>
     </div>
     <div>
       <div class="sec-title">% שינוי</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN %</label><input type="number" class="ni" id="cmin" value="20" onchange="saveFilters()"></div>
+        <div class="ri"><label>MIN %</label><input type="number" class="ni" id="cmin" value="5" onchange="saveFilters()"></div>
         <div class="ri"><label>MAX %</label><input type="number" class="ni" id="cmax" value="5000" onchange="saveFilters()"></div>
       </div>
     </div>
@@ -269,22 +269,22 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
     <div>
       <div class="sec-title">Volume (M)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN</label><input type="number" class="ni" id="vmin" value="1" step="0.5" onchange="saveFilters()"></div>
-        <div class="ri"><label>MAX</label><input type="number" class="ni" id="vmax" value="500" step="10" onchange="saveFilters()"></div>
+        <div class="ri"><label>MIN</label><input type="number" class="ni" id="vmin" value="0.1" step="0.1" onchange="saveFilters()"></div>
+        <div class="ri"><label>MAX</label><input type="number" class="ni" id="vmax" value="999" step="10" onchange="saveFilters()"></div>
       </div>
     </div>
     <div>
       <div class="sec-title">מחיר ($)</div>
       <div class="rg" style="margin-top:8px">
         <div class="ri"><label>MIN $</label><input type="number" class="ni" id="pmin" value="0.1" step="0.1" onchange="saveFilters()"></div>
-        <div class="ri"><label>MAX $</label><input type="number" class="ni" id="pmax" value="20" onchange="saveFilters()"></div>
+        <div class="ri"><label>MAX $</label><input type="number" class="ni" id="pmax" value="50" onchange="saveFilters()"></div>
       </div>
     </div>
     <div>
       <div class="sec-title">Market Cap (M)</div>
       <div class="rg" style="margin-top:8px">
         <div class="ri"><label>MIN</label><input type="number" class="ni" id="mmin" value="1" onchange="saveFilters()"></div>
-        <div class="ri"><label>MAX</label><input type="number" class="ni" id="mmax" value="200" onchange="saveFilters()"></div>
+        <div class="ri"><label>MAX</label><input type="number" class="ni" id="mmax" value="999" onchange="saveFilters()"></div>
       </div>
     </div>
     <div>
@@ -837,9 +837,14 @@ function applyFilters(){
   const newsLim=newsMap[newsFilter]||999;
   function newsOk(n){return(newsMap[n]||999)<=newsLim;}
 
+  // DEBUG
+  console.log('📊 מניות מהשרת לפני סינון:', liveStocks.length);
+  liveStocks.slice(0,10).forEach(s=>console.log(`  ${s.ticker} chg:${s.chg.toFixed(1)}% price:$${s.price} vol:${s.vol.toFixed(2)}M float:${s.float.toFixed(2)}M mcap:$${s.mcap.toFixed(0)}M`));
+  console.log(`פילטרים: chg[${cMin}-${cMax}]% | vol[${vMin}-${vMax}]M | price[$${pMin}-$${pMax}] | float[${fMin}-${fMax}]M | mcap[$${mMin}-$${mMax}]M`);
+
   let pool = liveStocks.filter(s=>{
     if(currentSession!=='all' && s.sess!==currentSession) return false;
-    return(
+    const ok =
       s.float >= fMin && s.float <= fMax &&
       s.chg   >= cMin && s.chg   <= cMax &&
       s.chgd  >= cdMin && s.chgd <= cdMax &&
@@ -847,9 +852,20 @@ function applyFilters(){
       s.price >= pMin && s.price <= pMax &&
       s.mcap  >= mMin && s.mcap  <= mMax &&
       s.short <= sMax &&
-      newsOk(s.news)
-    );
+      newsOk(s.news);
+    if(!ok){
+      const r=[];
+      if(s.float<fMin||s.float>fMax) r.push(`float:${s.float.toFixed(2)} !in [${fMin}-${fMax}]`);
+      if(s.chg<cMin||s.chg>cMax)     r.push(`chg:${s.chg.toFixed(1)}% !in [${cMin}-${cMax}]`);
+      if(s.vol<vMin||s.vol>vMax)      r.push(`vol:${s.vol.toFixed(2)}M !in [${vMin}-${vMax}]`);
+      if(s.price<pMin||s.price>pMax)  r.push(`price:$${s.price} !in [${pMin}-${pMax}]`);
+      if(s.mcap<mMin||s.mcap>mMax)    r.push(`mcap:$${s.mcap.toFixed(0)}M !in [${mMin}-${mMax}]`);
+      if(s.short>sMax)                r.push(`short:${s.short.toFixed(1)}%>${sMax}%`);
+      console.warn(`❌ ${s.ticker}: ${r.join(' | ')}`);
+    }
+    return ok;
   });
+  console.log('✅ אחרי סינון:', pool.length);
 
   pool = pool.map(s=>{
     const hits = matchKws(s.headlines||[]);
