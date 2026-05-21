@@ -1,38 +1,38 @@
-// --- הנה הקוד המתוקן והחסין לקריסות ---
-async function runScan() {
-    const scanBtn = document.getElementById('scan-btn');
-    const list = document.getElementById('stock-list');
+function renderStocks(stocks){
+  const list = document.getElementById('stock-list');
+  if(stocks.length === 0){
+    list.innerHTML = '<div class="empty-state">אין תוצאות</div>';
+    return;
+  }
+  
+  list.innerHTML = stocks.map((s, i) => {
+    // הגנה: אם הערך לא קיים, נציג 0
+    const price = (s.price || 0).toFixed(2);
+    const vol = (s.vol || 0).toFixed(1);
+    const float = (s.float || 0).toFixed(2);
+    const mcap = (s.mcap || 0).toFixed(1);
+    const short = (s.short || 0).toFixed(1);
     
-    try {
-        scanBtn.classList.add('scanning');
-        list.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div><div class="spin-lbl">SCANNING...</div></div>';
+    // חישוב צבעים עם הגנה
+    const sc = (s.short > 20) ? 'hi' : (s.short > 10 ? 'md' : '');
+    const newsToggle = ''; 
+    const newsItems = '';
 
-        // כאן אתה עושה את ה-fetch שלך
-        const response = await fetch('YOUR_PROXY_URL_HERE'); // וודא שה-URL שלך פה תקין
-        const data = await response.json();
-        
-        // הגנה: אם הנתונים לא מערך, אנחנו לא קורסים
-        if (!Array.isArray(data)) throw new Error('Invalid Data');
-
-        // שימוש בתיקון שדיברנו עליו - סינון מניות דפוקות
-        const liveStocks = data.map(q => {
-            if (!q || !q.symbol) return null;
-            return {
-                ticker: q.symbol,
-                price: q.regularMarketPrice || 0,
-                chg: q.regularMarketChangePercent || 0,
-                vol: (q.regularMarketVolume || 0) / 1e6,
-                // ... שאר השדות
-            };
-        }).filter(s => s !== null);
-
-        // ציור התוצאות
-        renderStocks(liveStocks);
-        
-    } catch (err) {
-        console.error("Scan failed:", err);
-        list.innerHTML = '<div class="empty-state">שגיאה בטעינת נתונים.<br>בדוק את ה-Proxy שלך.</div>';
-    } finally {
-        scanBtn.classList.remove('scanning');
-    }
+    return `<div class="stock-card" onclick="toggleNews(${i})">
+      <div class="card-top">
+        <div class="card-left">
+          <div class="ticker-row"><span class="ticker">${s.ticker || 'N/A'}</span></div>
+        </div>
+        <div class="card-right">
+          <div class="price-lbl">$${price}</div>
+        </div>
+      </div>
+      <div class="card-stats">
+        <div class="stat"><div class="stat-lbl">Volume</div><div class="stat-val">${vol}M</div></div>
+        <div class="stat"><div class="stat-lbl">Float</div><div class="stat-val">${float}M</div></div>
+        <div class="stat"><div class="stat-lbl">MCAP</div><div class="stat-val">$${mcap}M</div></div>
+        <div class="stat"><div class="stat-lbl">Short</div><div class="stat-val ${sc}">${short}%</div></div>
+      </div>
+    </div>`;
+  }).join('');
 }
