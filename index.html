@@ -574,8 +574,7 @@ function checkAlerts(results){
 
 // Two proxies: corsproxy first, allorigins as fallback
 const PROXIES = [
-raw => raw => 'https://script.google.com/macros/s/AKfycbzJ13bVGMJCoCDx2jvX5E-u-dt-e58Rr_Q-U33haDUST9irWNYOPxbedA2QAF8qRmHgUg/exec?url=' + encodeURIComponent(raw)
-// Simple timeout via Promise.race (no AbortSignal — max browser compat)
+raw => 'https://script.google.com/macros/s/AKfycbzJ13bVGMJCoCDx2jvX5E-u-dt-e58Rr_Q-U33haDUST9irWNYOPxbedA2QAF8qRmHgUg/exec?url=' + encodeURIComponent(raw)// Simple timeout via Promise.race (no AbortSignal — max browser compat)
 function withTimeout(promise, ms){
   return Promise.race([
     promise,
