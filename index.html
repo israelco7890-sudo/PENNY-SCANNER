@@ -643,11 +643,15 @@ function newsAgeLabel(pubStr){
   }catch(e){ return 'any'; }
 }
 
-// Raw RSS URLs (proxy added by robustFetch)
+// RSS sources — all verified to work through server-side proxy (GAS)
+// Yahoo Finance: main + alternative endpoint
+// SeekingAlpha: public RSS, no auth needed for headlines
+// Nasdaq: official news feed per ticker
 const NEWS_RAW_URLS = [
   t => `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${t}&region=US&lang=en-US`,
-  t => `https://www.stocktitan.net/news/${t.toLowerCase()}/rss.xml`,
-  t => `https://www.benzinga.com/stock/${t.toLowerCase()}/feed`,
+  t => `https://finance.yahoo.com/rss/headline?s=${t}`,
+  t => `https://seekingalpha.com/api/sa/combined/${t}.xml`,
+  t => `https://www.nasdaq.com/feed/rssoutbound?symbol=${t}`,
 ];
 
 // Fetch one RSS feed — never throws, returns [] on any error
