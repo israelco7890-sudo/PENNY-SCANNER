@@ -572,14 +572,12 @@ function checkAlerts(results){
 //  NETWORK LAYER — Retry + Dual-Proxy Fallback
 // ══════════════════════════════════════════════════════
 
-// ── CORS Proxies — tried in order until one succeeds ──
-// allorigins: adds CORS headers automatically, works from any browser
-// GAS: fallback (may have CORS issues from github.io)
-const PROXY_LIST = [
-  function(raw){ return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(raw); },
-  function(raw){ return 'https://corsproxy.io/?' + encodeURIComponent(raw); },
-  function(raw){ return 'https://script.google.com/macros/s/AKfycbyiyRhTRaNE16tzCixTnaA8eRE4lEVYxoZVKI8TE0wuxjF5gpcXnj-pfe6FMwjAOPaRuw/exec?url=' + encodeURIComponent(raw); },
-];
+// ── GAS Proxy — only reliable option from github.io ──
+// GAS URL: handles all external requests server-side (no CORS issues server-side)
+// NOTE: GAS redirects to accounts.google.com when not authorized as "Anyone"
+// Solution: use ?redirect_policy=manual in fetch options
+
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbyiyRhTRaNE16tzCixTnaA8eRE4lEVYxoZVKI8TE0wuxjF5gpcXnj-pfe6FMwjAOPaRuw/exec';
 
 // Simple timeout via Promise.race — no AbortSignal, max browser compat
 function withTimeout(promise, ms) {
@@ -589,27 +587,33 @@ function withTimeout(promise, ms) {
   ]);
 }
 
-// robustFetch — tries each proxy with retries until one works
+// robustFetch — sends request through GAS proxy with retries
 async function robustFetch(rawUrl, options) {
-  var timeoutMs = (options && options.timeoutMs) ? options.timeoutMs : 8000;
-  var maxRetries = (options && options.maxRetries) ? options.maxRetries : 2;
+  var timeoutMs = (options && options.timeoutMs) ? options.timeoutMs : 10000;
+  var maxRetries = (options && options.maxRetries) ? options.maxRetries : 3;
   var lastErr = new Error('fetch failed');
 
-  for (var p = 0; p < PROXY_LIST.length; p++) {
-    var proxyUrl = PROXY_LIST[p](rawUrl);
-    for (var attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        var res = await withTimeout(fetch(proxyUrl), timeoutMs);
-        if (res.ok) return res;
-        lastErr = new Error('HTTP ' + res.status);
-      } catch(e) {
-        lastErr = e;
-        if (attempt < maxRetries - 1) {
-          await new Promise(function(r){ setTimeout(r, 300 * (attempt + 1)); });
-        }
+  // Build GAS proxy URL
+  var proxyUrl = GAS_URL + '?url=' + encodeURIComponent(rawUrl);
+
+  for (var attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      var res = await withTimeout(fetch(proxyUrl, {
+        method: 'GET',
+        mode: 'cors',
+        redirect: 'follow',
+        cache: 'no-cache'
+      }), timeoutMs);
+      if (res.ok) return res;
+      lastErr = new Error('HTTP ' + res.status);
+      console.warn('robustFetch attempt ' + attempt + ' got: ' + res.status);
+    } catch(e) {
+      lastErr = e;
+      console.warn('robustFetch attempt ' + attempt + ' error:', e.message);
+      if (attempt < maxRetries - 1) {
+        await new Promise(function(r){ setTimeout(r, 500 * (attempt + 1)); });
       }
     }
-    console.warn('Proxy ' + p + ' failed, trying next...');
   }
   throw lastErr;
 }
