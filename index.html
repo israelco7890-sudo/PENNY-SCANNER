@@ -572,27 +572,39 @@ function checkAlerts(results){
 //  NETWORK LAYER — Retry + Dual-Proxy Fallback
 // ══════════════════════════════════════════════════════
 
-// Two proxies: corsproxy first, allorigins as fallback
-const PROXIES = [
-  raw => 'https://script.google.com/macros/s/AKfycbzJ13bVGMJCoCDx2jvX5E-u-dt-e58Rr_Q-U33haDUST9irWNYOPxbedA2QAF8qRmHgUg/exec?url=' + encodeURIComponent(raw)
-];
-// robustFetch: tries each proxy × maxRetries with back-off, never uses AbortSignal
-async function robustFetch(rawUrl, {timeoutMs=7000, maxRetries=2}={}){
-  let lastErr;
-  for(const proxyFn of PROXIES){
-    const url = proxyFn(rawUrl);
-    for(let attempt=0; attempt<maxRetries; attempt++){
-      try{
-        const res = await withTimeout(fetch(url), timeoutMs);
-        if(res.ok) return res;
-        lastErr = new Error('HTTP ' + res.status);
-      }catch(e){
-        lastErr = e;
-        if(attempt < maxRetries-1) await new Promise(r=>setTimeout(r, 400*(attempt+1)));
+// ── Google Apps Script Proxy (bypasses CORS reliably) ──
+const GAS_PROXY = 'https://script.google.com/macros/s/AKfycbzJ13bVGMJCoCDx2jvX5E-u-dt-e58Rr_Q-U33haDUST9irWNYOPxbedA2QAF8qRmHgUg/exec?url=';
+
+// Simple timeout via Promise.race — no AbortSignal, max browser compat
+function withTimeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, ms); })
+  ]);
+}
+
+// robustFetch — sends all requests through Google Apps Script proxy
+// Retries up to maxRetries times with exponential back-off
+async function robustFetch(rawUrl, options) {
+  var timeoutMs = (options && options.timeoutMs) ? options.timeoutMs : 7000;
+  var maxRetries = (options && options.maxRetries) ? options.maxRetries : 2;
+
+  var proxyUrl = GAS_PROXY + encodeURIComponent(rawUrl);
+  var lastErr = new Error('fetch failed');
+
+  for (var attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      var res = await withTimeout(fetch(proxyUrl), timeoutMs);
+      if (res.ok) return res;
+      lastErr = new Error('HTTP ' + res.status);
+    } catch(e) {
+      lastErr = e;
+      if (attempt < maxRetries - 1) {
+        await new Promise(function(r){ setTimeout(r, 400 * (attempt + 1)); });
       }
     }
   }
-  throw lastErr || new Error('fetch failed');
+  throw lastErr;
 }
 
 // Session detection based on current NY time
@@ -696,25 +708,15 @@ async function safeJSON(res){
 }
 
 // Top Gainers — robustFetch with retry + proxy fallback + safe JSON parse
-// Top Gainers - robustFetch with retry + proxy fallback + safe JSON parse
-async function fetchTopGainers() {
-  try {
-    // השתמשנו ב-most_active כי הוא יציב יותר בשרתים
-    const raw = 'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=most_active&count=50&start=0';
-    
-    // מנסים למשוך נתונים
-    const res = await robustFetch(raw, {timeoutMs: 9000, maxRetries: 3});
-    
-    // בודקים אם הנתונים תקינים (משתמשים ב-safeJSON שכתבת קודם)
+async function fetchTopGainers(){
+  const raw = 'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_gainers&count=50&start=0';
+  try{
+    const res = await robustFetch(raw, {timeoutMs:9000, maxRetries:3});
     const data = await safeJSON(res);
-    
-    // מחזירים את התוצאות, או רשימה ריקה אם אין נתונים
     return data?.finance?.result?.[0]?.quotes || [];
-    
-  } catch(e) {
-    // אם משהו משתבש, אנחנו מדפיסים שגיאה אבל לא נותנים לאפליקציה לקרוס
+  }catch(e){
     console.error('fetchTopGainers failed:', e.message);
-    return []; // מחזיר רשימה ריקה -> האפליקציה תראה "אין מניות" במקום לקרוס
+    return [];   // return empty → app shows "אין מניות" instead of crashing
   }
 }
 
