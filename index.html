@@ -572,12 +572,8 @@ function checkAlerts(results){
 //  NETWORK LAYER — Retry + Dual-Proxy Fallback
 // ══════════════════════════════════════════════════════
 
-// ── GAS Proxy — only reliable option from github.io ──
-// GAS URL: handles all external requests server-side (no CORS issues server-side)
-// NOTE: GAS redirects to accounts.google.com when not authorized as "Anyone"
-// Solution: use ?redirect_policy=manual in fetch options
-
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbyiyRhTRaNE16tzCixTnaA8eRE4lEVYxoZVKI8TE0wuxjF5gpcXnj-pfe6FMwjAOPaRuw/exec';
+// ── Cloudflare Worker Proxy — CORS enabled, no auth required ──
+const CF_PROXY = 'https://quiet-snowflake-f1fb.israelco7890.workers.dev/?url=';
 
 // Simple timeout via Promise.race — no AbortSignal, max browser compat
 function withTimeout(promise, ms) {
@@ -587,29 +583,22 @@ function withTimeout(promise, ms) {
   ]);
 }
 
-// robustFetch — sends request through GAS proxy with retries
+// robustFetch — sends request through Cloudflare Worker proxy with retries
 async function robustFetch(rawUrl, options) {
   var timeoutMs = (options && options.timeoutMs) ? options.timeoutMs : 10000;
   var maxRetries = (options && options.maxRetries) ? options.maxRetries : 3;
   var lastErr = new Error('fetch failed');
-
-  // Build GAS proxy URL
-  var proxyUrl = GAS_URL + '?url=' + encodeURIComponent(rawUrl);
+  var proxyUrl = CF_PROXY + encodeURIComponent(rawUrl);
 
   for (var attempt = 0; attempt < maxRetries; attempt++) {
     try {
-      var res = await withTimeout(fetch(proxyUrl, {
-        method: 'GET',
-        mode: 'cors',
-        redirect: 'follow',
-        cache: 'no-cache'
-      }), timeoutMs);
+      var res = await withTimeout(fetch(proxyUrl), timeoutMs);
       if (res.ok) return res;
       lastErr = new Error('HTTP ' + res.status);
-      console.warn('robustFetch attempt ' + attempt + ' got: ' + res.status);
+      console.warn('Attempt ' + attempt + ' got HTTP ' + res.status);
     } catch(e) {
       lastErr = e;
-      console.warn('robustFetch attempt ' + attempt + ' error:', e.message);
+      console.warn('Attempt ' + attempt + ' error: ' + e.message);
       if (attempt < maxRetries - 1) {
         await new Promise(function(r){ setTimeout(r, 500 * (attempt + 1)); });
       }
