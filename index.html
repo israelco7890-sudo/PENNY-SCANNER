@@ -574,10 +574,8 @@ function checkAlerts(results){
 
 // Two proxies: corsproxy first, allorigins as fallback
 const PROXIES = [
-  raw => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(raw),
-  raw => 'https://proxy.cors.sh/' + raw
+  raw => raw
 ];
-
 // Simple timeout via Promise.race (no AbortSignal — max browser compat)
 function withTimeout(promise, ms){
   return Promise.race([
