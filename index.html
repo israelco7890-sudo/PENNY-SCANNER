@@ -574,12 +574,8 @@ function checkAlerts(results){
 
 // Two proxies: corsproxy first, allorigins as fallback
 const PROXIES = [
-raw => 'https://script.google.com/macros/s/AKfycbzJ13bVGMJCoCDx2jvX5E-u-dt-e58Rr_Q-U33haDUST9irWNYOPxbedA2QAF8qRmHgUg/exec?url=' + encodeURIComponent(raw)// Simple timeout via Promise.race (no AbortSignal — max browser compat)
-function withTimeout(promise, ms){
-  return Promise.race([
-    promise,
-    new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))
-  ]);
+  raw => 'https://script.google.com/macros/s/AKfycbzJ13bVGMJCoCDx2jvX5E-u-dt-e58Rr_Q-U33haDUST9irWNYOPxbedA2QAF8qRmHgUg/exec?url=' + encodeURIComponent(raw)
+];
 }
 
 // robustFetch: tries each proxy × maxRetries with back-off, never uses AbortSignal
