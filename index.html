@@ -706,15 +706,25 @@ async function safeJSON(res){
 }
 
 // Top Gainers — robustFetch with retry + proxy fallback + safe JSON parse
-async function fetchTopGainers(){
-  const raw = 'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=most_active&count=50&start=0';
-  try{
-    const res = await robustFetch(raw, {timeoutMs:9000, maxRetries:3});
+// Top Gainers - robustFetch with retry + proxy fallback + safe JSON parse
+async function fetchTopGainers() {
+  try {
+    // השתמשנו ב-most_active כי הוא יציב יותר בשרתים
+    const raw = 'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=most_active&count=50&start=0';
+    
+    // מנסים למשוך נתונים
+    const res = await robustFetch(raw, {timeoutMs: 9000, maxRetries: 3});
+    
+    // בודקים אם הנתונים תקינים (משתמשים ב-safeJSON שכתבת קודם)
     const data = await safeJSON(res);
+    
+    // מחזירים את התוצאות, או רשימה ריקה אם אין נתונים
     return data?.finance?.result?.[0]?.quotes || [];
-  }catch(e){
+    
+  } catch(e) {
+    // אם משהו משתבש, אנחנו מדפיסים שגיאה אבל לא נותנים לאפליקציה לקרוס
     console.error('fetchTopGainers failed:', e.message);
-    return [];   // return empty → app shows "אין מניות" instead of crashing
+    return []; // מחזיר רשימה ריקה -> האפליקציה תראה "אין מניות" במקום לקרוס
   }
 }
 
