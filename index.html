@@ -24,138 +24,71 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;}
 body{background:var(--bg);color:var(--text);font-family:var(--mono);display:flex;flex-direction:column;}
-
-/* ── TOP BAR ── */
-.topbar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:10px 14px;background:var(--surface);
-  border-bottom:1px solid var(--border);
-  flex-shrink:0;gap:8px;
-}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:8px;}
 .logo{font-family:var(--sans);font-size:16px;font-weight:800;display:flex;align-items:center;gap:6px;flex-shrink:0;}
 .logo-icon{width:24px;height:24px;background:var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;}
 .logo span{color:var(--accent);}
 .topbar-right{display:flex;align-items:center;gap:6px;}
-.icon-btn{
-  width:36px;height:36px;border-radius:8px;border:1px solid var(--b2);
-  background:var(--s2);color:var(--mid);font-size:16px;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .15s;flex-shrink:0;
-}
+.icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--b2);background:var(--s2);color:var(--mid);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;}
 .icon-btn:active{transform:scale(.92);}
-.icon-btn.active{background:var(--pdim);border-color:var(--purple);color:var(--purple);}
 .icon-btn.notif-on{background:var(--gdim);border-color:var(--green);}
-.scan-fab{
-  display:flex;align-items:center;gap:5px;
-  padding:8px 14px;border-radius:8px;border:none;
-  background:var(--accent);color:#000;
-  font-family:var(--mono);font-size:11px;font-weight:700;
-  cursor:pointer;transition:all .15s;flex-shrink:0;
-  letter-spacing:.5px;
-}
+.scan-fab{display:flex;align-items:center;gap:5px;padding:8px 14px;border-radius:8px;border:none;background:var(--accent);color:#000;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;flex-shrink:0;letter-spacing:.5px;}
 .scan-fab:active{transform:scale(.95);}
 .scan-fab.scanning{background:var(--b2);color:var(--dim);pointer-events:none;}
-
-/* ── SESSION TABS ── */
-.sess-tabs{
-  display:flex;gap:0;background:var(--surface);
-  border-bottom:1px solid var(--border);flex-shrink:0;
-  overflow-x:auto;-webkit-overflow-scrolling:touch;
-}
+.sess-tabs{display:flex;gap:0;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
 .sess-tabs::-webkit-scrollbar{display:none;}
-.stab{
-  flex:1;min-width:64px;padding:9px 4px;border:none;background:transparent;
-  color:var(--dim);font-family:var(--mono);font-size:10px;font-weight:700;
-  cursor:pointer;transition:all .15s;border-bottom:2px solid transparent;
-  letter-spacing:.5px;white-space:nowrap;
-}
+.stab{flex:1;min-width:64px;padding:9px 4px;border:none;background:transparent;color:var(--dim);font-family:var(--mono);font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;border-bottom:2px solid transparent;letter-spacing:.5px;white-space:nowrap;}
 .stab.all.active{color:var(--green);border-bottom-color:var(--green);}
 .stab.pre.active{color:var(--cyan);border-bottom-color:var(--cyan);}
 .stab.reg.active{color:var(--blue);border-bottom-color:var(--blue);}
 .stab.after.active{color:var(--orange);border-bottom-color:var(--orange);}
-
-/* ── AR BAR ── */
-.ar-bar{
-  display:none;align-items:center;justify-content:space-between;
-  padding:6px 14px;background:var(--gdim);border-bottom:1px solid var(--green);
-  font-size:10px;color:var(--green);flex-shrink:0;
-}
+.ar-bar{display:none;align-items:center;justify-content:space-between;padding:6px 14px;background:var(--gdim);border-bottom:1px solid var(--green);font-size:10px;color:var(--green);flex-shrink:0;}
 .ar-bar.show{display:flex;}
 .ar-ctr{font-weight:700;}
-
-/* ── STOCK LIST ── */
 .stock-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .stock-list::-webkit-scrollbar{width:3px;}
 .stock-list::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
-
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:12px;color:var(--dim);}
 .empty-icon{font-size:48px;opacity:.2;}
 .empty-text{font-size:13px;text-align:center;line-height:1.7;}
-
 .spinner-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:14px;}
 .spinner{width:32px;height:32px;border:2px solid var(--b2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .spin-lbl{font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;}
-
-/* stock card */
-.stock-card{
-  padding:12px 14px;border-bottom:1px solid var(--border);
-  cursor:pointer;transition:background .1s;
-  animation:fadeIn .2s ease both;
-}
+.spin-sub{font-size:9px;color:var(--dim);margin-top:4px;}
+.stock-card{padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;animation:fadeIn .2s ease both;}
 .stock-card:active{background:var(--s2);}
 .stock-card.new-card{animation:newFlash .7s ease both;}
 @keyframes newFlash{0%{background:#0d2040;}60%{background:#0a1830;}100%{background:transparent;}}
 @keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
-
-/* card top row */
 .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
 .card-left{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;}
 .card-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
-
 .ticker-row{display:flex;align-items:center;gap:6px;}
 .ticker{font-size:17px;font-weight:700;letter-spacing:.5px;}
-.t-pre{color:var(--cyan);}
-.t-reg{color:var(--text);}
-.t-after{color:var(--orange);}
-
+.t-pre{color:var(--cyan);}.t-reg{color:var(--text);}.t-after{color:var(--orange);}
 .sess-pill{font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase;border:1px solid;}
 .sp-pre{background:var(--cdim);color:var(--cyan);border-color:var(--cyan);}
 .sp-reg{background:var(--bdim);color:var(--blue);border-color:var(--blue);}
 .sp-after{background:var(--odim);color:var(--orange);border-color:var(--orange);}
-
 .badge-row{display:flex;flex-wrap:wrap;gap:3px;}
 .badge{font-size:8px;font-weight:700;padding:1px 6px;border-radius:3px;}
 .b-new{color:var(--green);background:var(--gdim);border:1px solid var(--green);}
 .b-news{color:var(--yellow);background:var(--ydim);}
 .b-kw{color:var(--purple);background:var(--pdim);border:1px solid rgba(167,139,250,.35);}
-
-/* price / chg */
 .chg-pct{font-size:20px;font-weight:700;}
-.up{color:var(--green);}
-.dn{color:var(--red);}
+.up{color:var(--green);}.dn{color:var(--red);}
 .chg-dollar{font-size:12px;font-weight:600;}
 .price-lbl{font-size:12px;color:var(--mid);}
-
-/* card stats row */
 .card-stats{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap;}
 .stat{display:flex;flex-direction:column;gap:1px;}
 .stat-lbl{font-size:8px;color:var(--dim);letter-spacing:.5px;text-transform:uppercase;}
 .stat-val{font-size:11px;color:var(--mid);}
-.stat-val.hi{color:var(--red);}
-.stat-val.md{color:var(--yellow);}
-
-/* vol bar inline */
+.stat-val.hi{color:var(--red);}.stat-val.md{color:var(--yellow);}
 .vol-wrap{display:flex;align-items:center;gap:6px;}
 .vbar-bg{width:50px;height:3px;background:var(--b2);border-radius:2px;overflow:hidden;}
 .vbar-fill{height:100%;border-radius:2px;}
-
-/* news expand */
-.news-toggle-row{
-  display:flex;align-items:center;gap:6px;
-  margin-top:8px;padding-top:8px;border-top:1px solid var(--border);
-  font-size:10px;color:var(--mid);cursor:pointer;
-}
+.news-toggle-row{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--mid);cursor:pointer;}
 .news-toggle-row .arr{transition:transform .2s;display:inline-block;font-size:9px;}
 .news-toggle-row.open .arr{transform:rotate(180deg);}
 .news-panel{display:none;margin-top:8px;}
@@ -167,58 +100,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--mono);display:flex
 .news-age{font-size:9px;color:var(--dim);}
 .kw-tags-row{display:flex;gap:3px;flex-wrap:wrap;}
 .kw-hit-tag{font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;background:var(--pdim);color:var(--purple);border:1px solid rgba(167,139,250,.35);}
-
-/* ── BOTTOM NAV (mobile) ── */
-.bottom-nav{
-  display:flex;background:var(--surface);
-  border-top:1px solid var(--border);flex-shrink:0;
-}
-.bnav-item{
-  flex:1;display:flex;flex-direction:column;align-items:center;
-  gap:3px;padding:10px 4px 12px;cursor:pointer;
-  font-size:9px;color:var(--dim);letter-spacing:.5px;
-  transition:color .15s;border:none;background:transparent;
-  font-family:var(--mono);
-}
+.bottom-nav{display:flex;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 12px;cursor:pointer;font-size:9px;color:var(--dim);letter-spacing:.5px;transition:color .15s;border:none;background:transparent;font-family:var(--mono);position:relative;}
 .bnav-item .ico{font-size:20px;line-height:1;}
 .bnav-item.active{color:var(--accent);}
 .bnav-item:active{transform:scale(.9);}
-.badge-count{
-  position:absolute;top:6px;right:calc(50% - 18px);
-  background:var(--purple);color:#fff;font-size:8px;font-weight:700;
-  padding:1px 4px;border-radius:6px;min-width:14px;text-align:center;
-  display:none;
-}
-.bnav-item{position:relative;}
-
-/* ── BOTTOM SHEET ── */
+.badge-count{position:absolute;top:6px;right:calc(50% - 18px);background:var(--purple);color:#fff;font-size:8px;font-weight:700;padding:1px 4px;border-radius:6px;min-width:14px;text-align:center;display:none;}
 .sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:none;}
 .sheet-overlay.open{display:block;}
-.sheet{
-  position:fixed;bottom:0;left:0;right:0;z-index:500;
-  background:var(--surface);border-radius:18px 18px 0 0;
-  border-top:1px solid var(--border);
-  max-height:80vh;display:flex;flex-direction:column;
-  transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);
-}
+.sheet{position:fixed;bottom:0;left:0;right:0;z-index:500;background:var(--surface);border-radius:18px 18px 0 0;border-top:1px solid var(--border);max-height:80vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
 .sheet.open{transform:translateY(0);}
 .sheet-handle{width:36px;height:4px;background:var(--b2);border-radius:2px;margin:12px auto 0;flex-shrink:0;}
 .sheet-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;flex-shrink:0;}
 .sheet-title{font-family:var(--sans);font-size:15px;font-weight:800;}
 .sheet-close{background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;padding:0 4px;line-height:1;}
-
-/* תוקן: הגדרת גלילה עצמאית ונקייה בתוך התיבה */
-.sheet-body{
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  padding:0 16px 30px;
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-  flex:1;
-}
-
-/* sheet sections */
+.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 30px;display:flex;flex-direction:column;gap:18px;flex:1;}
 .sec-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:2px;}
 .filter-row{display:flex;flex-direction:column;gap:5px;}
 .fl{font-size:11px;color:var(--mid);display:flex;justify-content:space-between;}
@@ -241,8 +137,6 @@ input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;hei
 .sw-track:before{content:"";position:absolute;height:16px;width:16px;left:4px;top:4px;background:var(--dim);border-radius:50%;transition:.2s;}
 input:checked+.sw-track{background:var(--gdim);border:1px solid var(--green);}
 input:checked+.sw-track:before{transform:translateX(20px);background:var(--green);}
-
-/* keyword chips in sheet */
 .kw-grid{display:flex;flex-wrap:wrap;gap:6px;}
 .kw-chip{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid;transition:opacity .15s;user-select:none;}
 .kw-chip.off{opacity:.3;}
@@ -260,13 +154,9 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
 .kw-inp{flex:1;background:var(--s2);border:1px solid var(--b2);color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 10px;border-radius:8px;outline:none;}
 .kw-inp:focus{border-color:var(--accent);}
 .add-btn{padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;}
-
-/* alert setting rows */
 .am-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:12px;color:var(--mid);}
 .am-ni{width:72px;background:var(--s2);border:1px solid var(--purple);color:var(--purple);font-family:var(--mono);font-size:13px;padding:6px 8px;border-radius:6px;outline:none;text-align:center;}
 .am-chk{accent-color:var(--purple);width:18px;height:18px;cursor:pointer;}
-
-/* toast */
 .toast-log{position:fixed;bottom:70px;left:12px;right:12px;display:flex;flex-direction:column;gap:6px;z-index:999;pointer-events:none;}
 .toast{background:var(--surface);border:1px solid var(--purple);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--text);display:flex;align-items:flex-start;gap:9px;box-shadow:0 4px 20px rgba(0,0,0,.6);animation:tIn .3s ease;pointer-events:all;}
 .toast.removing{animation:tOut .25s ease forwards;}
@@ -278,16 +168,13 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
 .toast-msg{color:var(--mid);font-size:10px;line-height:1.4;}
 .toast-kws{display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;}
 .toast-close{background:none;border:none;color:var(--dim);cursor:pointer;font-size:16px;padding:0;flex-shrink:0;}
-
-/* sort bar */
-.sort-bar{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:7px 14px;background:var(--surface);border-bottom:1px solid var(--border);
-  flex-shrink:0;
-}
+.sort-bar{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
 .res-count{font-size:11px;color:var(--dim);}
 .res-count strong{color:var(--accent);font-size:14px;}
 .sort-sel{background:var(--s2);border:1px solid var(--b2);color:var(--text);font-family:var(--mono);font-size:10px;padding:5px 8px;border-radius:6px;outline:none;}
+/* error banner */
+.err-bar{display:none;padding:6px 14px;background:var(--rdim);border-bottom:1px solid var(--red);font-size:10px;color:var(--red);flex-shrink:0;align-items:center;gap:8px;}
+.err-bar.show{display:flex;}
 </style>
 </head>
 <body>
@@ -311,6 +198,8 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
   <span>⟳ Auto Refresh פעיל</span>
   <span class="ar-ctr" id="ar-ctr">15s</span>
 </div>
+
+<div class="err-bar" id="err-bar">⚠️ <span id="err-msg"></span></div>
 
 <div class="sort-bar">
   <div class="res-count">מציג <strong id="result-num">0</strong> מניות</div>
@@ -431,9 +320,7 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
     <button class="sheet-close" onclick="closeSheet()">✕</button>
   </div>
   <div class="sheet-body">
-    <div style="font-size:11px;color:var(--mid);line-height:1.6">
-      לחץ על מילה לכיבוי/הדלקה · X למחיקה · הוסף מילות משלך למטה
-    </div>
+    <div style="font-size:11px;color:var(--mid);line-height:1.6">לחץ על מילה לכיבוי/הדלקה · X למחיקה · הוסף מילות משלך למטה</div>
     <div id="kw-bio-sec"><div class="kw-cat-title">🔵 ביו / קליני</div><div class="kw-grid" id="kw-bio"></div></div>
     <div id="kw-reg-sec"><div class="kw-cat-title">🟢 רגולציה FDA</div><div class="kw-grid" id="kw-reg"></div></div>
     <div id="kw-ma-sec"><div class="kw-cat-title">🟡 M&A / עסקאות</div><div class="kw-grid" id="kw-ma"></div></div>
@@ -480,9 +367,7 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
     </div>
     <div>
       <div class="sec-title">Push Notifications</div>
-      <div style="font-size:11px;color:var(--mid);line-height:1.7;margin-top:6px">
-        לחץ על כפתור 🔔 בראש הדף כדי להפעיל/לכבות התראות לדפדפן ולנייד.
-      </div>
+      <div style="font-size:11px;color:var(--mid);line-height:1.7;margin-top:6px">לחץ על כפתור 🔔 בראש הדף כדי להפעיל/לכבות התראות לדפדפן ולנייד.</div>
     </div>
   </div>
 </div>
@@ -490,7 +375,9 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
 <div class="toast-log" id="toast-log"></div>
 
 <script>
-// ── KEYWORDS DATA & LOCAL STORAGE ─────────────────────────────────
+// ══════════════════════════════════════════════════════
+//  KEYWORDS
+// ══════════════════════════════════════════════════════
 const KW_DEF={
   bio:['phase 1','phase 2','phase 3','phase ii','phase iii','clinical trial','cancer','tumor','oncology','rare disease','orphan drug','biotech','pivotal','efficacy','data readout'],
   reg:['fda','fda approval','pdufa','nda','bla','ind','breakthrough','fast track','priority review','clearance','accelerated approval','510k'],
@@ -502,25 +389,16 @@ const KW_DEF={
 const CAT_CLS={bio:'c-bio',reg:'c-reg',ma:'c-ma',tech:'c-tech',gov:'c-gov',short:'c-short'};
 let kws={};
 
-// טעינה או אתחול מילות מפתח מ-LocalStorage
 if(localStorage.getItem('ps_kws')){
-  try { kws = JSON.parse(localStorage.getItem('ps_kws')); } catch(e) { initKws(); }
-} else { initKws(); }
+  try{kws=JSON.parse(localStorage.getItem('ps_kws'));}catch(e){initKws();}
+}else{initKws();}
 
-function initKws(){
-  kws={};
-  Object.keys(KW_DEF).forEach(c=>{kws[c]=KW_DEF[c].map(w=>({w,on:true}));});
-  saveKws();
-}
-function saveKws(){ localStorage.setItem('ps_kws', JSON.stringify(kws)); }
-
+function initKws(){kws={};Object.keys(KW_DEF).forEach(c=>{kws[c]=KW_DEF[c].map(w=>({w,on:true}));});saveKws();}
+function saveKws(){localStorage.setItem('ps_kws',JSON.stringify(kws));}
 function renderKws(){
   Object.keys(kws).forEach(cat=>{
     const el=document.getElementById('kw-'+cat);if(!el)return;
-    el.innerHTML=kws[cat].map((k,i)=>`
-      <div class="kw-chip ${CAT_CLS[cat]} ${k.on?'':'off'}" onclick="toggleKw('${cat}',${i})">
-        ${k.w}<span class="chip-x" onclick="rmKw(event,'${cat}',${i})"> ✕</span>
-      </div>`).join('');
+    el.innerHTML=kws[cat].map((k,i)=>`<div class="kw-chip ${CAT_CLS[cat]} ${k.on?'':'off'}" onclick="toggleKw('${cat}',${i})">${k.w}<span class="chip-x" onclick="rmKw(event,'${cat}',${i})"> ✕</span></div>`).join('');
   });
   const total=Object.values(kws).flat().filter(k=>k.on).length;
   const badge=document.getElementById('kw-badge');
@@ -541,27 +419,28 @@ function matchKws(headlines){
   return active.filter(kw=>text.includes(kw));
 }
 
-// ── BOTTOM SHEET MANAGEMENT ─────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+//  SHEETS
+// ══════════════════════════════════════════════════════
 let currentSheet=null;
 function showSheet(name){
   closeSheet(false);
   document.getElementById('sheet-overlay').classList.add('open');
-  const sh=document.getElementById('sheet-'+name);
-  sh.classList.add('open');currentSheet=name;
-  
+  document.getElementById('sheet-'+name).classList.add('open');
+  currentSheet=name;
   document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
-  const navBtn = document.getElementById('nav-'+name);
-  if(navBtn) navBtn.classList.add('active');
-  
+  const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
   if(name==='kw')renderKws();
 }
-function closeSheet(animate=true){
+function closeSheet(){
   document.getElementById('sheet-overlay').classList.remove('open');
-  ['scan','kw','alert'].forEach(n=>{document.getElementById('sheet-'+n).classList.remove('open');});
+  ['scan','kw','alert'].forEach(n=>document.getElementById('sheet-'+n).classList.remove('open'));
   currentSheet=null;
 }
 
-// ── SESSION MANAGEMENT ─────────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+//  SESSION
+// ══════════════════════════════════════════════════════
 let currentSession='all';
 function setSession(s){
   currentSession=s;
@@ -570,131 +449,87 @@ function setSession(s){
   applyFilters();
 }
 
-// ── SAVE & LOAD FILTERS (LOCAL STORAGE) ────────────────────────────
+// ══════════════════════════════════════════════════════
+//  FILTERS — SAVE/LOAD
+// ══════════════════════════════════════════════════════
 function saveFilters(){
-  const filters = {
-    fmin: document.getElementById('fmin').value,
-    fmax: document.getElementById('fmax').value,
-    cmin: document.getElementById('cmin').value,
-    cmax: document.getElementById('cmax').value,
-    cdmin: document.getElementById('cdmin').value,
-    cdmax: document.getElementById('cdmax').value,
-    vmin: document.getElementById('vmin').value,
-    vmax: document.getElementById('vmax').value,
-    pmin: document.getElementById('pmin').value,
-    pmax: document.getElementById('pmax').value,
-    mmin: document.getElementById('mmin').value,
-    mmax: document.getElementById('mmax').value,
-    smax: document.getElementById('smax').value,
-    news: newsFilter,
-    ar: document.getElementById('ar-toggle').checked
-  };
-  localStorage.setItem('ps_filters', JSON.stringify(filters));
-  updateSliderLabels();
-  applyFilters();
+  const f={fmin:document.getElementById('fmin').value,fmax:document.getElementById('fmax').value,cmin:document.getElementById('cmin').value,cmax:document.getElementById('cmax').value,cdmin:document.getElementById('cdmin').value,cdmax:document.getElementById('cdmax').value,vmin:document.getElementById('vmin').value,vmax:document.getElementById('vmax').value,pmin:document.getElementById('pmin').value,pmax:document.getElementById('pmax').value,mmin:document.getElementById('mmin').value,mmax:document.getElementById('mmax').value,smax:document.getElementById('smax').value,news:newsFilter,ar:document.getElementById('ar-toggle').checked};
+  localStorage.setItem('ps_filters',JSON.stringify(f));
+  updateSliderLabels();applyFilters();
 }
-
 function loadFilters(){
-  const stored = localStorage.getItem('ps_filters');
-  if(!stored) { updateSliderLabels(); return; }
-  try {
-    const f = JSON.parse(stored);
-    document.getElementById('fmin').value = f.fmin || 0.1;
-    document.getElementById('fmax').value = f.fmax || 20;
-    document.getElementById('cmin').value = f.cmin || 20;
-    document.getElementById('cmax').value = f.cmax || 5000;
-    document.getElementById('cdmin').value = f.cdmin || 0.3;
-    document.getElementById('cdmax').value = f.cdmax || 50;
-    document.getElementById('vmin').value = f.vmin || 1;
-    document.getElementById('vmax').value = f.vmax || 500;
-    document.getElementById('pmin').value = f.pmin || 0.1;
-    document.getElementById('pmax').value = f.pmax || 20;
-    document.getElementById('mmin').value = f.mmin || 1;
-    document.getElementById('mmax').value = f.mmax || 200;
-    document.getElementById('smax').value = f.smax || 50;
-    newsFilter = f.news || 'any';
-    document.getElementById('ar-toggle').checked = f.ar || false;
-    
+  const stored=localStorage.getItem('ps_filters');
+  if(!stored){updateSliderLabels();return;}
+  try{
+    const f=JSON.parse(stored);
+    ['fmin','fmax','cmin','cmax','cdmin','cdmax','vmin','vmax','pmin','pmax','mmin','mmax','smax'].forEach(id=>{if(f[id]!==undefined)document.getElementById(id).value=f[id];});
+    newsFilter=f.news||'any';
+    document.getElementById('ar-toggle').checked=f.ar||false;
     document.querySelectorAll('[data-news]').forEach(x=>x.classList.remove('active'));
-    const activeNewsBtn = document.querySelector(`[data-news="${newsFilter}"]`);
-    if(activeNewsBtn) activeNewsBtn.classList.add('active');
-    
+    const ab=document.querySelector(`[data-news="${newsFilter}"]`);if(ab)ab.classList.add('active');
     toggleAR();
-  } catch(e) { console.error(e); }
+  }catch(e){}
   updateSliderLabels();
 }
-
 function updateSliderLabels(){
   document.getElementById('fmin-v').textContent=parseFloat(document.getElementById('fmin').value).toFixed(1)+'M';
   document.getElementById('fmax-v').textContent=parseFloat(document.getElementById('fmax').value).toFixed(1)+'M';
   document.getElementById('smax-v').textContent=document.getElementById('smax').value+'%';
 }
-
-// מאזינים מורחבים לסליידרים
-document.getElementById('fmin').addEventListener('input', updateSliderLabels);
-document.getElementById('fmax').addEventListener('input', updateSliderLabels);
-document.getElementById('smax').addEventListener('input', updateSliderLabels);
+document.getElementById('fmin').addEventListener('input',updateSliderLabels);
+document.getElementById('fmax').addEventListener('input',updateSliderLabels);
+document.getElementById('smax').addEventListener('input',updateSliderLabels);
 
 let newsFilter='any';
 document.querySelectorAll('[data-news]').forEach(b=>b.addEventListener('click',()=>{
   document.querySelectorAll('[data-news]').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active');
-  newsFilter=b.dataset.news;
-  saveFilters();
+  b.classList.add('active');newsFilter=b.dataset.news;saveFilters();
 }));
 
-// ── ALERTS SETTINGS (LOCAL STORAGE) ─────────────────────────────────
 function saveAlertSettings(){
-  const alerts = {
-    kw: document.getElementById('al-kw').checked,
-    news: document.getElementById('al-news').checked,
-    chg: document.getElementById('al-chg').value,
-    vol: document.getElementById('al-vol').value,
-    pre: document.getElementById('al-pre').checked,
-    reg: document.getElementById('al-reg').checked,
-    after: document.getElementById('al-after').checked
-  };
-  localStorage.setItem('ps_alerts', JSON.stringify(alerts));
+  const a={kw:document.getElementById('al-kw').checked,news:document.getElementById('al-news').checked,chg:document.getElementById('al-chg').value,vol:document.getElementById('al-vol').value,pre:document.getElementById('al-pre').checked,reg:document.getElementById('al-reg').checked,after:document.getElementById('al-after').checked};
+  localStorage.setItem('ps_alerts',JSON.stringify(a));
 }
-
 function loadAlertSettings(){
-  const stored = localStorage.getItem('ps_alerts');
-  if(!stored) return;
-  try {
-    const a = JSON.parse(stored);
-    document.getElementById('al-kw').checked = a.kw !== undefined ? a.kw : true;
-    document.getElementById('al-news').checked = a.news !== undefined ? a.news : false;
-    document.getElementById('al-chg').value = a.chg || 30;
-    document.getElementById('al-vol').value = a.vol || 3;
-    document.getElementById('al-pre').checked = a.pre !== undefined ? a.pre : true;
-    document.getElementById('al-reg').checked = a.reg !== undefined ? a.reg : true;
-    document.getElementById('al-after').checked = a.after !== undefined ? a.after : true;
-  } catch(e) {}
+  const stored=localStorage.getItem('ps_alerts');if(!stored)return;
+  try{
+    const a=JSON.parse(stored);
+    document.getElementById('al-kw').checked=a.kw!==undefined?a.kw:true;
+    document.getElementById('al-news').checked=a.news!==undefined?a.news:false;
+    document.getElementById('al-chg').value=a.chg||30;
+    document.getElementById('al-vol').value=a.vol||3;
+    document.getElementById('al-pre').checked=a.pre!==undefined?a.pre:true;
+    document.getElementById('al-reg').checked=a.reg!==undefined?a.reg:true;
+    document.getElementById('al-after').checked=a.after!==undefined?a.after:true;
+  }catch(e){}
 }
 
-// ── AUTO REFRESH ─────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+//  AUTO REFRESH
+// ══════════════════════════════════════════════════════
 let arTimer=null,arCd=0;
 function toggleAR(){
   const on=document.getElementById('ar-toggle').checked;
   document.getElementById('ar-bar').classList.toggle('show',on);
   if(on)startAR();else{if(arTimer)clearInterval(arTimer);arTimer=null;}
 }
-function startAR(){arCd=15;updAR();if(arTimer)clearInterval(arTimer);arTimer=setInterval(()=>{arCd--;updAR();if(arCd<=0){arCd=15;applyFilters();}},1000);}
+function startAR(){arCd=15;updAR();if(arTimer)clearInterval(arTimer);arTimer=setInterval(()=>{arCd--;updAR();if(arCd<=0){arCd=15;runScan();}},1000);}
 function updAR(){document.getElementById('ar-ctr').textContent=arCd+'s';}
 
-// ── NOTIFICATIONS SYSTEM ──────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+//  NOTIFICATIONS
+// ══════════════════════════════════════════════════════
 let alertedSet=new Set();
 async function reqNotif(){
   if(!('Notification'in window))return;
   if(Notification.permission==='granted'){alertedSet.clear();setNotifIcon(false);return;}
   const p=await Notification.requestPermission();
   setNotifIcon(p==='granted');
-  if(p==='granted'){setTimeout(()=>pushN('⚡ PennyScanner','התראות מופעלות!',''),500);}
+  if(p==='granted')setTimeout(()=>pushN('⚡ PennyScanner','התראות מופעלות!',''),500);
 }
 function setNotifIcon(on){
   const b=document.getElementById('notif-icon');
-  b.textContent=on?'🔔':'🔕';
-  b.classList.toggle('notif-on',on);
+  b.textContent=on?'🔔':'🔕';b.classList.toggle('notif-on',on);
 }
 function pushN(title,body,tag){
   if(Notification.permission!=='granted')return;
@@ -705,13 +540,7 @@ function showToast(s){
   const log=document.getElementById('toast-log');
   const t=document.createElement('div');t.className='toast';
   const kwtags=(s.kwHits||[]).slice(0,3).map(k=>`<span class="kw-hit-tag">${k}</span>`).join('');
-  t.innerHTML=`<div class="toast-icon">🚀</div>
-    <div class="toast-body">
-      <div class="toast-title">${s.ticker} ▲${s.chg.toFixed(1)}%</div>
-      <div class="toast-kws">${kwtags}</div>
-      <div class="toast-msg">$${s.price.toFixed(2)} | +$${s.chgd.toFixed(2)} | Vol ${s.vol.toFixed(1)}M</div>
-    </div>
-    <button class="toast-close" onclick="rmToast(this.parentElement)">✕</button>`;
+  t.innerHTML=`<div class="toast-icon">🚀</div><div class="toast-body"><div class="toast-title">${s.ticker} ▲${s.chg.toFixed(1)}%</div><div class="toast-kws">${kwtags}</div><div class="toast-msg">$${s.price.toFixed(2)} | +$${s.chgd.toFixed(2)} | Vol ${s.vol.toFixed(1)}M</div></div><button class="toast-close" onclick="rmToast(this.parentElement)">✕</button>`;
   log.appendChild(t);setTimeout(()=>rmToast(t),9000);
 }
 function rmToast(el){el.classList.add('removing');setTimeout(()=>el.remove(),300);}
@@ -735,69 +564,299 @@ function checkAlerts(results){
   });
 }
 
-// ── MARKET DATA ───────────────────────────────────────────────────
-const ALL_STOCKS=[
-  {ticker:"ILUS",sess:"pre",price:0.72,chg:220.8,chgd:0.50,vol:88.4,mcap:5.2,float:1.2,short:3.1,news:"1d",headlines:["ILUS Government Emergency Services Grant Awarded — AI Defense Platform Contract","DoD Military Award for AI Emergency Response Technology"]},
-  {ticker:"AMST",sess:"pre",price:2.37,chg:201.49,chgd:1.58,vol:73.0,mcap:6.1,float:1.8,short:4.2,news:"1d",headlines:["Amesite Phase 2 AI Platform DoD Government Grant Award","AMST Defense Training Technology Contract Signed"]},
-  {ticker:"WNW",sess:"pre",price:4.27,chg:77.18,chgd:1.86,vol:12.3,mcap:8.1,float:2.1,short:5.5,news:"1d",headlines:["Wize Commerce AI Partnership Deal Agreement Signed"]},
-  {ticker:"DPLS",sess:"pre",price:0.29,chg:88.3,chgd:0.13,vol:31.4,mcap:1.8,float:6.3,short:2.4,news:"3d",headlines:["DPW Holdings Merger Acquisition Deal — Tech Buyout Agreement"]},
-  {ticker:"LPCN",sess:"reg",price:2.33,chg:543.2,chgd:1.97,vol:95.1,mcap:6.8,float:1.9,short:4.1,news:"1d",headlines:["Lipocine Phase 3 NDA Submission — FDA Priority Review PDUFA Date","LPCN FDA Breakthrough Designation Oral Testosterone Clearance"]},
-  {ticker:"SEEL",sess:"reg",price:1.34,chg:425.1,chgd:1.09,vol:144.8,mcap:5.6,float:2.2,short:7.4,news:"1d",headlines:["Seelos Phase 2 Cancer Clinical Trial — FDA IND Clearance","SEEL Positive Oncology Data Tumor Reduction Phase 2"]},
-  {ticker:"NILE",sess:"reg",price:0.58,chg:410.2,chgd:0.47,vol:201.5,mcap:3.1,float:0.8,short:5.2,news:"1d",headlines:["NovaBay FDA Breakthrough NDA Clearance Approved","NILE Merger Agreement Global Pharma Partner Deal"]},
-  {ticker:"KCGI",sess:"reg",price:1.18,chg:347.8,chgd:0.92,vol:187.2,mcap:4.2,float:1.4,short:3.8,news:"1d",headlines:["Kali-Extrakt Buyout Takeover 220% Premium Acquisition","KCGI Acquisition Agreement Biotech Partner Deal"]},
-  {ticker:"BBAI",sess:"reg",price:2.14,chg:312.4,chgd:1.63,vol:142.3,mcap:8.7,float:4.1,short:22.1,news:"1d",headlines:["BigBear.ai $45M DoD Government Contract — AI Defense Intelligence Platform","BBAI Military Defense Agency Strategic Partnership"]},
-  {ticker:"XELA",sess:"reg",price:1.62,chg:234.5,chgd:1.16,vol:56.7,mcap:9.1,float:4.5,short:9.6,news:"1d",headlines:["Xeris Phase 2 Rare Disease Breakthrough FDA Therapy Designation","XELA FDA Clearance Orphan Drug Fast Track Approval"]},
-  {ticker:"GOVX",sess:"reg",price:3.51,chg:185.37,chgd:2.27,vol:59.01,mcap:12.19,float:2.89,short:8.8,news:"3d",headlines:["GeoVax Phase 2 Cancer Vaccine Clinical Trial — FDA Fast Track","GOVX Phase 2 Oncology Immunogenicity Data Positive"]},
-  {ticker:"GMBL",sess:"reg",price:0.91,chg:177.3,chgd:0.58,vol:67.2,mcap:4.4,float:3.2,short:6.7,news:"1d",headlines:["Esports Entertainment Acquisition European Gaming Deal $12M","GMBL Joint Venture Stake Online Casino Agreement"]},
-  {ticker:"TTOO",sess:"reg",price:0.74,chg:192.4,chgd:0.49,vol:49.3,mcap:2.7,float:1.8,short:6.1,news:"3d",headlines:["T2 Biosystems FDA NDA Clearance Rapid Diagnostic Platform","TTOO Phase 2 Rare Disease Clinical Trial Initiated"]},
-  {ticker:"ATER",sess:"reg",price:3.27,chg:148.6,chgd:1.95,vol:82.4,mcap:14.8,float:5.9,short:24.3,news:"3d",headlines:["Aterian Short Squeeze — Short Interest 24% Momentum","ATER Warrant Offering Platform Expansion Dilution"]},
-  {ticker:"GFAI",sess:"reg",price:1.05,chg:156.1,chgd:0.64,vol:73.8,mcap:7.3,float:2.4,short:8.9,news:"1d",headlines:["Guardforce AI Government Contract Award Security Platform","GFAI AI Technology Partnership Defense Contractor"]},
-  {ticker:"SHOT",sess:"reg",price:1.23,chg:95.1,chgd:0.60,vol:22.7,mcap:9.8,float:7.6,short:11.4,news:"any",headlines:[]},
-  {ticker:"RUBI",sess:"after",price:3.59,chg:107.51,chgd:1.86,vol:35.1,mcap:7.2,float:2.9,short:6.1,news:"1d",headlines:["Rubicon FDA Fast Track NDA Breakthrough Designation","RUBI Acquisition Takeover Deal 180% Premium Agreement"]},
-  {ticker:"INM",sess:"after",price:1.76,chg:158.56,chgd:1.08,vol:35.3,mcap:4.8,float:3.1,short:5.2,news:"3d",headlines:["IN8bio Phase 2 Oncology Tumor Cancer Data Positive Trial"]},
-  {ticker:"CODX",sess:"after",price:2.04,chg:48.91,chgd:0.67,vol:16.8,mcap:5.3,float:4.2,short:7.8,news:"3d",headlines:["Co-Diagnostics Partnership Biotech Platform Deal Agreement"]},
-  {ticker:"MTVA",sess:"after",price:1.81,chg:63.06,chgd:0.70,vol:52.9,mcap:6.2,float:5.1,short:8.3,news:"any",headlines:[]},
+// ══════════════════════════════════════════════════════
+//  LIVE DATA ENGINE
+// ══════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════
+//  NETWORK LAYER — Retry + Dual-Proxy Fallback
+// ══════════════════════════════════════════════════════
+
+// Two proxies: corsproxy first, allorigins as fallback
+const PROXIES = [
+  raw => 'https://corsproxy.io/?' + encodeURIComponent(raw),
+  raw => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(raw),
 ];
 
-let currentResults=[],seenSet=new Set();
-
-// ── SCAN OPERATORS ─────────────────────────────────────────────────
-function runScan(){
-  const btn=document.getElementById('scan-btn');
-  btn.classList.add('scanning');btn.textContent='◉ סורק...';
-  document.getElementById('stock-list').innerHTML=`<div class="spinner-wrap"><div class="spinner"></div><div class="spin-lbl">סורק שוק...</div></div>`;
-  setTimeout(()=>{applyFilters();btn.classList.remove('scanning');btn.textContent='⚡ SCAN';if(document.getElementById('ar-toggle').checked)startAR();},600);
+// Simple timeout via Promise.race (no AbortSignal — max browser compat)
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))
+  ]);
 }
 
+// robustFetch: tries each proxy × maxRetries with back-off, never uses AbortSignal
+async function robustFetch(rawUrl, {timeoutMs=7000, maxRetries=2}={}){
+  let lastErr;
+  for(const proxyFn of PROXIES){
+    const url = proxyFn(rawUrl);
+    for(let attempt=0; attempt<maxRetries; attempt++){
+      try{
+        const res = await withTimeout(fetch(url), timeoutMs);
+        if(res.ok) return res;
+        lastErr = new Error('HTTP ' + res.status);
+      }catch(e){
+        lastErr = e;
+        if(attempt < maxRetries-1) await new Promise(r=>setTimeout(r, 400*(attempt+1)));
+      }
+    }
+  }
+  throw lastErr || new Error('fetch failed');
+}
+
+// Session detection based on current NY time
+function getMarketSession(){
+  const now = new Date();
+  const ny = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const h = ny.getHours(), m = ny.getMinutes();
+  const mins = h*60+m, day = ny.getDay();
+  if(day===0||day===6) return 'after';
+  if(mins>=240 && mins<570)  return 'pre';
+  if(mins>=570 && mins<960)  return 'reg';
+  if(mins>=960 && mins<1200) return 'after';
+  return 'after';
+}
+
+// ── NEWS ENGINE: 3 PARALLEL SOURCES ─────────────────────────────
+function parseRSS(xmlText){
+  try{
+    const xml = new DOMParser().parseFromString(xmlText,'text/xml');
+    return [...xml.querySelectorAll('item')].map(item=>({
+      title: item.querySelector('title')?.textContent?.trim()||'',
+      desc:  (item.querySelector('description')?.textContent||'').replace(/<[^>]+>/g,'').trim().slice(0,100),
+      pub:   item.querySelector('pubDate')?.textContent||'',
+    }));
+  }catch(e){ return []; }
+}
+
+function newsAgeLabel(pubStr){
+  if(!pubStr) return 'any';
+  try{
+    const diff=(Date.now()-new Date(pubStr))/(1000*60*60);
+    if(diff<24)  return '1d';
+    if(diff<72)  return '3d';
+    if(diff<168) return '7d';
+    return 'any';
+  }catch(e){ return 'any'; }
+}
+
+// Raw RSS URLs (proxy added by robustFetch)
+const NEWS_RAW_URLS = [
+  t => `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${t}&region=US&lang=en-US`,
+  t => `https://www.stocktitan.net/news/${t.toLowerCase()}/rss.xml`,
+  t => `https://www.benzinga.com/stock/${t.toLowerCase()}/feed`,
+];
+
+// Fetch one RSS feed — never throws, returns [] on any error
+async function fetchOneFeed(rawUrl){
+  try{
+    const res = await robustFetch(rawUrl, {timeoutMs:5000, maxRetries:2});
+    const text = await res.text();
+    // Guard: proxy sometimes returns HTML error page instead of XML
+    if(text.trimStart().startsWith('<!') || text.trimStart().startsWith('<html')){
+      console.warn('fetchOneFeed: got HTML instead of RSS for', rawUrl);
+      return [];
+    }
+    return parseRSS(text);
+  }catch(e){
+    console.warn('fetchOneFeed failed:', e.message);
+    return [];
+  }
+}
+
+// All 3 sources in parallel → merged, deduped, sorted
+async function fetchAllNewsForTicker(ticker){
+  const results = await Promise.all(NEWS_RAW_URLS.map(fn => fetchOneFeed(fn(ticker))));
+  const seen = new Set(), merged = [];
+  for(const items of results)
+    for(const item of items){
+      const key = item.title.slice(0,60).toLowerCase();
+      if(!key||seen.has(key)) continue;
+      seen.add(key); merged.push(item);
+    }
+  merged.sort((a,b)=>new Date(b.pub||0)-new Date(a.pub||0));
+  const headlines = merged.slice(0,8).map(i=>i.title+(i.desc?' — '+i.desc:''));
+  return { headlines, news: newsAgeLabel(merged[0]?.pub) };
+}
+
+// Enrich top N stocks with news — all parallel, callback after each resolves
+async function enrichWithNews(stocks, onTickerDone){
+  await Promise.all(stocks.map(async s=>{
+    const {headlines,news} = await fetchAllNewsForTicker(s.ticker);
+    s.headlines=headlines; s.news=news;
+    if(onTickerDone) onTickerDone(s);
+  }));
+}
+
+// Safe JSON parse — guards against HTML error pages from proxy
+async function safeJSON(res){
+  const text = await res.text();
+  const trimmed = text.trimStart();
+  if(!trimmed.startsWith('{') && !trimmed.startsWith('[')){
+    console.error('Expected JSON but got HTML/text. First 200 chars:', trimmed.slice(0,200));
+    throw new Error('Response is not JSON (got HTML error page from proxy)');
+  }
+  try{
+    return JSON.parse(text);
+  }catch(e){
+    console.error('JSON.parse failed:', e.message, '| text start:', trimmed.slice(0,100));
+    throw new Error('JSON parse error: ' + e.message);
+  }
+}
+
+// Top Gainers — robustFetch with retry + proxy fallback + safe JSON parse
+async function fetchTopGainers(){
+  const raw = 'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_gainers&count=50&start=0';
+  try{
+    const res = await robustFetch(raw, {timeoutMs:9000, maxRetries:3});
+    const data = await safeJSON(res);
+    return data?.finance?.result?.[0]?.quotes || [];
+  }catch(e){
+    console.error('fetchTopGainers failed:', e.message);
+    return [];   // return empty → app shows "אין מניות" instead of crashing
+  }
+}
+
+// Build stock object from Yahoo quote
+function quoteToStock(q, sess){
+  return {
+    ticker: q.symbol,
+    sess,
+    price:  q.regularMarketPrice || 0,
+    chg:    q.regularMarketChangePercent || 0,
+    chgd:   q.regularMarketChange || 0,
+    vol:    (q.regularMarketVolume || 0) / 1e6,
+    mcap:   (q.marketCap || 0) / 1e6,
+    float:  (q.floatShares || q.sharesOutstanding || 0) / 1e6 || 1,
+    short:  (q.shortPercentOfFloat || 0) * 100,
+    news:   'any',
+    headlines: [],
+  };
+}
+
+// Enrich top N stocks with news — all tickers fire IN PARALLEL
+// Renders incrementally so UI updates as each ticker resolves
+async function enrichWithNews(stocks, onTickerDone){
+  await Promise.all(
+    stocks.map(async s=>{
+      const { headlines, news } = await fetchAllNewsForTicker(s.ticker);
+      s.headlines = headlines;
+      s.news = news;
+      if(onTickerDone) onTickerDone(s);   // optional incremental callback
+    })
+  );
+}
+
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+let liveStocks = [];   // raw enriched stocks from API
+let currentResults = [], seenSet = new Set();
+
+function showErr(msg){
+  const bar=document.getElementById('err-bar');
+  document.getElementById('err-msg').textContent=msg;
+  bar.classList.add('show');
+  setTimeout(()=>bar.classList.remove('show'),6000);
+}
+
+// ══════════════════════════════════════════════════════
+//  SCAN — main entry point
+// ══════════════════════════════════════════════════════
+async function runScan(){
+  const btn=document.getElementById('scan-btn');
+  btn.classList.add('scanning');btn.textContent='◉ סורק...';
+  document.getElementById('stock-list').innerHTML=`
+    <div class="spinner-wrap">
+      <div class="spinner"></div>
+      <div class="spin-lbl">מושך נתונים חיים...</div>
+      <div class="spin-sub">Yahoo · Stocktitan · Benzinga</div>
+    </div>`;
+
+  try{
+    const sess = getMarketSession();
+
+    // 1. Fetch top gainers from Yahoo screener
+    const quotes = await fetchTopGainers();
+    if(!quotes.length) throw new Error('לא התקבלו נתונים מ-Yahoo Finance');
+
+    // 2. Convert all quotes to stock objects
+    liveStocks = quotes.map(q => quoteToStock(q, sess));
+
+    // 3. Render immediately with what we have (no news yet) so user sees data fast
+    applyFilters();
+
+    // 4. Enrich TOP 20 with news from 3 sources in parallel.
+    //    onTickerDone fires after each ticker resolves → re-render incrementally.
+    const toEnrich = liveStocks.slice(0, 20);
+    let enrichedCount = 0;
+    await enrichWithNews(toEnrich, (_s)=>{
+      enrichedCount++;
+      // Re-render every 3 tickers resolved, or on last one — keeps UI snappy
+      if(enrichedCount % 3 === 0 || enrichedCount === toEnrich.length){
+        applyFilters();
+      }
+    });
+
+    // 5. Final render with all news data
+    applyFilters();
+
+  }catch(err){
+    console.error('Scan error:', err);
+    showErr('שגיאה: ' + err.message);
+    document.getElementById('stock-list').innerHTML=`
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-text">לא ניתן לטעון נתונים<br><span style="font-size:11px;color:var(--dim)">${err.message}</span></div>
+      </div>`;
+  }finally{
+    btn.classList.remove('scanning');btn.textContent='⚡ SCAN';
+    if(document.getElementById('ar-toggle').checked)startAR();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  FILTER & DISPLAY
+// ══════════════════════════════════════════════════════
 function applyFilters(){
-  const fMin=+document.getElementById('fmin').value,fMax=+document.getElementById('fmax').value;
-  const cMin=+document.getElementById('cmin').value,cMax=+document.getElementById('cmax').value;
+  const fMin=+document.getElementById('fmin').value, fMax=+document.getElementById('fmax').value;
+  const cMin=+document.getElementById('cmin').value,  cMax=+document.getElementById('cmax').value;
   const cdMin=+document.getElementById('cdmin').value,cdMax=+document.getElementById('cdmax').value;
-  const vMin=+document.getElementById('vmin').value,vMax=+document.getElementById('vmax').value;
-  const pMin=+document.getElementById('pmin').value,pMax=+document.getElementById('pmax').value;
-  const mMin=+document.getElementById('mmin').value,mMax=+document.getElementById('mmax').value;
+  const vMin=+document.getElementById('vmin').value,  vMax=+document.getElementById('vmax').value;
+  const pMin=+document.getElementById('pmin').value,  pMax=+document.getElementById('pmax').value;
+  const mMin=+document.getElementById('mmin').value,  mMax=+document.getElementById('mmax').value;
   const sMax=+document.getElementById('smax').value;
   const newsMap={'1d':1,'3d':3,'7d':7,'any':999};
   const newsLim=newsMap[newsFilter]||999;
   function newsOk(n){return(newsMap[n]||999)<=newsLim;}
 
-  let pool=ALL_STOCKS.filter(s=>{
-    if(currentSession!=='all'&&s.sess!==currentSession)return false;
-    return s.float>=fMin&&s.float<=fMax&&s.chg>=cMin&&s.chg<=cMax&&
-      s.chgd>=cdMin&&s.chgd<=cdMax&&s.vol>=vMin&&s.vol<=vMax&&
-      s.price>=pMin&&s.price<=pMax&&s.mcap>=mMin&&s.mcap<=mMax&&
-      s.short<=sMax&&newsOk(s.news);
+  let pool = liveStocks.filter(s=>{
+    if(currentSession!=='all' && s.sess!==currentSession) return false;
+    return(
+      s.float >= fMin && s.float <= fMax &&
+      s.chg   >= cMin && s.chg   <= cMax &&
+      s.chgd  >= cdMin && s.chgd <= cdMax &&
+      s.vol   >= vMin && s.vol   <= vMax &&
+      s.price >= pMin && s.price <= pMax &&
+      s.mcap  >= mMin && s.mcap  <= mMax &&
+      s.short <= sMax &&
+      newsOk(s.news)
+    );
   });
 
-  pool=pool.map(s=>{
-    const hits=matchKws(s.headlines||[]);
-    const key=s.ticker+s.sess;
-    const isNew=!seenSet.has(key);
-    if(isNew)seenSet.add(key);
-    return{...s,kwHits:hits,kwScore:hits.length,isNew};
+  pool = pool.map(s=>{
+    const hits = matchKws(s.headlines||[]);
+    const key  = s.ticker+s.sess;
+    const isNew = !seenSet.has(key);
+    if(isNew) seenSet.add(key);
+    return{...s, kwHits:hits, kwScore:hits.length, isNew};
   });
 
-  currentResults=pool;
+  // Sort by kwScore by default so keyword hits surface first
+  pool.sort((a,b)=>b.kwScore-a.kwScore||b.chg-a.chg);
+
+  currentResults = pool;
   sortResults(true);
   checkAlerts(currentResults);
 }
@@ -809,7 +868,9 @@ function sortResults(skip){
   renderResults();
 }
 
-// ── RENDER ENGINE ──────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════════
 const SESS_PILL_CLS={pre:'sp-pre',reg:'sp-reg',after:'sp-after'};
 const SESS_LBL={pre:'PRE',reg:'REG',after:'AFTER'};
 const T_CLS={pre:'t-pre',reg:'t-reg',after:'t-after'};
@@ -819,7 +880,8 @@ function renderResults(){
   const list=document.getElementById('stock-list');
   document.getElementById('result-num').textContent=currentResults.length;
   if(!currentResults.length){
-    list.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">אין מניות — שנה פילטרים</div></div>';return;
+    list.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">אין מניות — שנה פילטרים<br><span style="font-size:11px;color:var(--dim)">נסה להרחיב טווחי Float/Volume</span></div></div>';
+    return;
   }
   const maxVol=Math.max(...currentResults.map(s=>s.vol));
   list.innerHTML=currentResults.map((s,i)=>{
@@ -827,7 +889,7 @@ function renderResults(){
     const d=Math.min(i*15,300);
     const sc=s.short>20?'hi':s.short>10?'md':'';
     const vp=(s.vol/maxVol*100).toFixed(0);
-    const vc=VOL_COL[s.sess];
+    const vc=VOL_COL[s.sess]||'#60a5fa';
     const bNew=s.isNew?`<span class="badge b-new">NEW</span>`:'';
     const bNews=s.news!=='any'?`<span class="badge b-news">NEWS ${s.news}</span>`:'';
     const bKws=(s.kwHits||[]).slice(0,2).map(k=>`<span class="badge b-kw">${k}</span>`).join('');
@@ -847,12 +909,16 @@ function renderResults(){
     const hasH=s.headlines&&s.headlines.length>0;
     const newsToggle=hasH?`<div class="news-toggle-row" id="nt-${i}" onclick="toggleNews(${i})">📰 ${s.headlines.length} headline${s.headlines.length>1?'s':''} <span class="arr">▼</span></div>`:'';
 
+    const sessClass = T_CLS[s.sess]||'t-reg';
+    const sessPill  = SESS_PILL_CLS[s.sess]||'sp-reg';
+    const sessLbl   = SESS_LBL[s.sess]||'REG';
+
     return `<div class="stock-card ${s.isNew?'new-card':''}" style="animation-delay:${d}ms">
       <div class="card-top">
         <div class="card-left">
           <div class="ticker-row">
-            <span class="ticker ${T_CLS[s.sess]}">${s.ticker}</span>
-            <span class="sess-pill ${SESS_PILL_CLS[s.sess]}">${SESS_LBL[s.sess]}</span>
+            <span class="ticker ${sessClass}">${s.ticker}</span>
+            <span class="sess-pill ${sessPill}">${sessLbl}</span>
           </div>
           <div class="badge-row">${bNew}${bNews}${bKws}</div>
         </div>
@@ -886,13 +952,15 @@ function toggleNews(i){
   p.classList.toggle('open',!o);if(t)t.classList.toggle('open',!o);
 }
 
-// ── INITIALIZATION ────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded', ()=>{
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
   loadFilters();
   loadAlertSettings();
   renderKws();
   setNotifIcon(typeof Notification!=='undefined'&&Notification.permission==='granted');
-  setTimeout(runScan,300);
+  // Don't auto-scan — wait for user to press SCAN
 });
 </script>
 </body>
