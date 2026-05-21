@@ -572,8 +572,14 @@ function checkAlerts(results){
 //  NETWORK LAYER — Retry + Dual-Proxy Fallback
 // ══════════════════════════════════════════════════════
 
-// ── Google Apps Script Proxy (bypasses CORS reliably) ──
-const GAS_PROXY = 'https://script.google.com/macros/s/AKfycbyiyRhTRaNE16tzCixTnaA8eRE4lEVYxoZVKI8TE0wuxjF5gpcXnj-pfe6FMwjAOPaRuw/exec?url=';
+// ── CORS Proxies — tried in order until one succeeds ──
+// allorigins: adds CORS headers automatically, works from any browser
+// GAS: fallback (may have CORS issues from github.io)
+const PROXY_LIST = [
+  function(raw){ return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(raw); },
+  function(raw){ return 'https://corsproxy.io/?' + encodeURIComponent(raw); },
+  function(raw){ return 'https://script.google.com/macros/s/AKfycbyiyRhTRaNE16tzCixTnaA8eRE4lEVYxoZVKI8TE0wuxjF5gpcXnj-pfe6FMwjAOPaRuw/exec?url=' + encodeURIComponent(raw); },
+];
 
 // Simple timeout via Promise.race — no AbortSignal, max browser compat
 function withTimeout(promise, ms) {
@@ -583,26 +589,27 @@ function withTimeout(promise, ms) {
   ]);
 }
 
-// robustFetch — sends all requests through Google Apps Script proxy
-// Retries up to maxRetries times with exponential back-off
+// robustFetch — tries each proxy with retries until one works
 async function robustFetch(rawUrl, options) {
-  var timeoutMs = (options && options.timeoutMs) ? options.timeoutMs : 7000;
+  var timeoutMs = (options && options.timeoutMs) ? options.timeoutMs : 8000;
   var maxRetries = (options && options.maxRetries) ? options.maxRetries : 2;
-
-  var proxyUrl = GAS_PROXY + encodeURIComponent(rawUrl);
   var lastErr = new Error('fetch failed');
 
-  for (var attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      var res = await withTimeout(fetch(proxyUrl), timeoutMs);
-      if (res.ok) return res;
-      lastErr = new Error('HTTP ' + res.status);
-    } catch(e) {
-      lastErr = e;
-      if (attempt < maxRetries - 1) {
-        await new Promise(function(r){ setTimeout(r, 400 * (attempt + 1)); });
+  for (var p = 0; p < PROXY_LIST.length; p++) {
+    var proxyUrl = PROXY_LIST[p](rawUrl);
+    for (var attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        var res = await withTimeout(fetch(proxyUrl), timeoutMs);
+        if (res.ok) return res;
+        lastErr = new Error('HTTP ' + res.status);
+      } catch(e) {
+        lastErr = e;
+        if (attempt < maxRetries - 1) {
+          await new Promise(function(r){ setTimeout(r, 300 * (attempt + 1)); });
+        }
       }
     }
+    console.warn('Proxy ' + p + ' failed, trying next...');
   }
   throw lastErr;
 }
