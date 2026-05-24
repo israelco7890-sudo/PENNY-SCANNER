@@ -172,6 +172,8 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
 .res-count{font-size:11px;color:var(--dim);}
 .res-count strong{color:var(--accent);font-size:14px;}
 .sort-sel{background:var(--s2);border:1px solid var(--b2);color:var(--text);font-family:var(--mono);font-size:10px;padding:5px 8px;border-radius:6px;outline:none;}
+
+
 /* error banner */
 .err-bar{display:none;padding:6px 14px;background:var(--rdim);border-bottom:1px solid var(--red);font-size:10px;color:var(--red);flex-shrink:0;align-items:center;gap:8px;}
 .err-bar.show{display:flex;}
@@ -187,6 +189,7 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
   </div>
 </div>
 
+
 <div class="sess-tabs">
   <button class="stab all active" onclick="setSession('all')">🌐 ALL</button>
   <button class="stab pre" onclick="setSession('pre')">🌅 PRE</button>
@@ -196,7 +199,7 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
 
 <div class="ar-bar" id="ar-bar">
   <span>⟳ Auto Refresh פעיל</span>
-  <span class="ar-ctr" id="ar-ctr">15s</span>
+  <span class="ar-ctr" id="ar-ctr">5:00</span>
 </div>
 
 <div class="err-bar" id="err-bar">⚠️ <span id="err-msg"></span></div>
@@ -513,8 +516,8 @@ function toggleAR(){
   document.getElementById('ar-bar').classList.toggle('show',on);
   if(on)startAR();else{if(arTimer)clearInterval(arTimer);arTimer=null;}
 }
-function startAR(){arCd=15;updAR();if(arTimer)clearInterval(arTimer);arTimer=setInterval(()=>{arCd--;updAR();if(arCd<=0){arCd=15;runScan();}},1000);}
-function updAR(){document.getElementById('ar-ctr').textContent=arCd+'s';}
+function startAR(){arCd=300;updAR();if(arTimer)clearInterval(arTimer);arTimer=setInterval(()=>{arCd--;updAR();if(arCd<=0){arCd=300;runScan();}},1000);}
+function updAR(){const m=Math.floor(arCd/60),s=arCd%60;document.getElementById('ar-ctr').textContent=m+':'+String(s).padStart(2,'0');}
 
 // ══════════════════════════════════════════════════════
 //  NOTIFICATIONS
@@ -565,63 +568,86 @@ function checkAlerts(results){
 }
 
 // ══════════════════════════════════════════════════════
-//  LIVE DATA ENGINE
+//  DATA ENGINE — Yahoo Finance via Cloudflare Worker
 // ══════════════════════════════════════════════════════
 
-// ══════════════════════════════════════════════════════
-//  DATA ENGINE — Claude AI (no proxy needed)
-// ══════════════════════════════════════════════════════
+const CF_PROXY = 'https://quiet-snowflake-f1fb.israelco7890.workers.dev/?url=';
 
-async function fetchFromClaude(prompt) {
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 4000,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-  if (!response.ok) throw new Error('Claude API error ' + response.status);
-  const data = await response.json();
-  const text = data.content.map(b => b.text || '').join('');
-  // Strip markdown fences
-  let clean = text.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim();
-  // If JSON was cut off, try to recover by truncating to last complete object
-  if (!clean.endsWith(']')) {
-    const lastBrace = clean.lastIndexOf('}');
-    if (lastBrace !== -1) clean = clean.slice(0, lastBrace + 1) + ']';
-  }
-  return clean;
+async function proxyFetch(rawUrl, timeoutMs) {
+  timeoutMs = timeoutMs || 12000;
+  const proxyUrl = CF_PROXY + encodeURIComponent(rawUrl);
+  const res = await Promise.race([
+    fetch(proxyUrl),
+    new Promise((_,rej) => setTimeout(() => rej(new Error('timeout')), timeoutMs))
+  ]);
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res;
+}
+
+function yahooQuoteToStock(q, sess) {
+  const price  = q.regularMarketPrice || 0;
+  const chgPct = q.regularMarketChangePercent || 0;
+  const volM   = (q.regularMarketVolume || 0) / 1e6;
+  const mcapM  = (q.marketCap || 0) / 1e6;
+  const floatM = q.floatShares ? q.floatShares / 1e6
+               : q.sharesOutstanding ? q.sharesOutstanding / 1e6 : 5;
+  const shortPct = (q.shortPercentOfFloat || 0) < 1
+    ? (q.shortPercentOfFloat || 0) * 100 : (q.shortPercentOfFloat || 0);
+  return {
+    ticker: q.symbol, sess, price,
+    chg: chgPct, chgd: q.regularMarketChange || 0,
+    vol: volM, mcap: mcapM, float: floatM, short: shortPct,
+    news: 'any', headlines: [],
+  };
 }
 
 async function fetchTopGainers() {
   const sess = getMarketSession();
-  console.log('📡 מנסה Claude AI...');
-  const today = new Date().toISOString().slice(0,10);
-  const prompt = `You are a stock market data formatter. Output ONLY raw JSON, no text before or after.
+  const yahooUrls = [
+    'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_gainers&count=25',
+    'https://query2.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=small_cap_gainers&count=25',
+  ];
 
-Generate a JSON array of 10 small-cap US stocks that had notable gains recently. Use well-known penny stock tickers that have been active in the past few months (real symbols like MULN, BBIG, ATER, PROG, CLOV, SPCE, IDEX, TPVG, SNDL, GFAI, MRIN, NVAX, ENDP, NKLA, WKHS, etc).
-
-Format each item exactly like this example:
-[{"ticker":"MULN","price":0.85,"chg":18.5,"chgd":0.13,"vol":45.2,"float":8.3,"mcap":180,"short":12,"headlines":["Mullen Automotive announces new dealer partnership","MULN shares surge on production news"],"news":"1d"}]
-
-Return array of 10 such objects. Output only the JSON array starting with [ and ending with ].`;
-
-  const raw = await fetchFromClaude(prompt);
-  let arr;
-  try {
-    arr = JSON.parse(raw);
-  } catch(e) {
-    console.warn('JSON parse failed, trying repair...', e.message);
-    // Try to extract array from partial response
-    const match = raw.match(/\[.*\]/s);
-    if (match) arr = JSON.parse(match[0]);
-    else throw new Error('לא ניתן לנתח JSON מ-Claude: ' + e.message);
+  for (let i = 0; i < yahooUrls.length; i++) {
+    try {
+      console.log('📡 Yahoo endpoint', i, '...');
+      const res = await proxyFetch(yahooUrls[i]);
+      const data = JSON.parse(await res.text());
+      const quotes = data?.finance?.result?.[0]?.quotes || [];
+      if (quotes.length > 0) {
+        console.log('✅ Yahoo:', quotes.length, 'מניות');
+        return quotes.map(q => yahooQuoteToStock(q, sess));
+      }
+    } catch(e) { console.warn('Yahoo', i, 'נכשל:', e.message); }
   }
-  if (!Array.isArray(arr) || arr.length === 0) throw new Error('Claude לא החזיר מניות');
-  console.log('✅ Claude AI:', arr.length, 'מניות');
-  return arr;
+
+  // Fallback: Finviz CSV
+  try {
+    console.log('📡 Finviz...');
+    const res = await proxyFetch('https://finviz.com/export.ashx?v=111&f=cap_smallover,geo_usa,sh_price_u20,ta_change_u5&ft=4&o=-change&c=1,2,3,4,5,6,7,65,66,67');
+    const text = await res.text();
+    if (text.includes('Ticker')) {
+      const lines = text.trim().split('
+');
+      const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
+      return lines.slice(1).map(line => {
+        const cols = line.split(',').map(c => c.replace(/"/g,'').trim());
+        const r = {};
+        headers.forEach((h,i) => r[h] = cols[i]||'');
+        const price = parseFloat(r['Price'])||0;
+        const chgPct = parseFloat((r['Change']||'0').replace('%',''))||0;
+        const vs = r['Volume']||'0';
+        const volM = vs.includes('M') ? parseFloat(vs) : vs.includes('K') ? parseFloat(vs)/1000 : parseInt(vs)/1e6;
+        let floatM = parseFloat(r['Float']||'5');
+        if ((r['Float']||'').includes('B')) floatM *= 1000;
+        let mcapM = parseFloat(r['Market Cap']||'0')||0;
+        if ((r['Market Cap']||'').includes('B')) mcapM *= 1000;
+        return { ticker:r['Ticker']||'?', sess, price, chg:chgPct, chgd:price*chgPct/100, vol:volM, mcap:mcapM, float:floatM||5, short:parseFloat((r['Short Float']||'0').replace('%',''))||0, news:'any', headlines:[] };
+      });
+    }
+  } catch(e) { console.warn('Finviz נכשל:', e.message); }
+
+  throw new Error('כל המקורות נכשלו');
 }
 
 // Session detection based on current NY time
