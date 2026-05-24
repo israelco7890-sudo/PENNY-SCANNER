@@ -1,42 +1,864 @@
-import streamlit as st
-import yfinance as yf
-import pandas as pd
+<!DOCTYPE html>
+<html lang="he">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>PennyScanner Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0a0c0f;--surface:#111418;--s2:#171b21;
+  --border:#1e2530;--b2:#252d3a;
+  --green:#4ade80;--gdim:#162a1e;--grow:#0d1f13;
+  --red:#f87171;--rdim:#2a1010;
+  --yellow:#fbbf24;--ydim:#2e2208;
+  --blue:#60a5fa;--bdim:#0f1e30;
+  --orange:#fb923c;--odim:#2a1500;
+  --purple:#a78bfa;--pdim:#1a1530;
+  --cyan:#22d3ee;--cdim:#0a2030;
+  --text:#e2e8f0;--dim:#4a5568;--mid:#8899aa;
+  --accent:#38bdf8;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Syne',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);display:flex;flex-direction:column;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;gap:8px;}
+.logo{font-family:var(--sans);font-size:16px;font-weight:800;display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.logo-icon{width:24px;height:24px;background:var(--accent);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.logo span{color:var(--accent);}
+.topbar-right{display:flex;align-items:center;gap:6px;}
+.icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--b2);background:var(--s2);color:var(--mid);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s;flex-shrink:0;}
+.icon-btn:active{transform:scale(.92);}
+.icon-btn.notif-on{background:var(--gdim);border-color:var(--green);}
+.scan-fab{display:flex;align-items:center;gap:5px;padding:8px 14px;border-radius:8px;border:none;background:var(--accent);color:#000;font-family:var(--mono);font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;flex-shrink:0;letter-spacing:.5px;}
+.scan-fab:active{transform:scale(.95);}
+.scan-fab.scanning{background:var(--b2);color:var(--dim);pointer-events:none;}
+.sess-tabs{display:flex;gap:0;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.sess-tabs::-webkit-scrollbar{display:none;}
+.stab{flex:1;min-width:64px;padding:9px 4px;border:none;background:transparent;color:var(--dim);font-family:var(--mono);font-size:10px;font-weight:700;cursor:pointer;transition:all .15s;border-bottom:2px solid transparent;letter-spacing:.5px;white-space:nowrap;}
+.stab.all.active{color:var(--green);border-bottom-color:var(--green);}
+.stab.pre.active{color:var(--cyan);border-bottom-color:var(--cyan);}
+.stab.reg.active{color:var(--blue);border-bottom-color:var(--blue);}
+.stab.after.active{color:var(--orange);border-bottom-color:var(--orange);}
+.ar-bar{display:none;align-items:center;justify-content:space-between;padding:6px 14px;background:var(--gdim);border-bottom:1px solid var(--green);font-size:10px;color:var(--green);flex-shrink:0;}
+.ar-bar.show{display:flex;}
+.ar-ctr{font-weight:700;}
+.stock-list{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.stock-list::-webkit-scrollbar{width:3px;}
+.stock-list::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px;}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:12px;color:var(--dim);}
+.empty-icon{font-size:48px;opacity:.2;}
+.empty-text{font-size:13px;text-align:center;line-height:1.7;}
+.spinner-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60vh;gap:14px;}
+.spinner{width:32px;height:32px;border:2px solid var(--b2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.spin-lbl{font-size:10px;color:var(--dim);letter-spacing:2px;text-transform:uppercase;}
+.spin-sub{font-size:9px;color:var(--dim);margin-top:4px;}
+.stock-card{padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .1s;animation:fadeIn .2s ease both;}
+.stock-card:active{background:var(--s2);}
+.stock-card.new-card{animation:newFlash .7s ease both;}
+@keyframes newFlash{0%{background:#0d2040;}60%{background:#0a1830;}100%{background:transparent;}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.card-left{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0;}
+.card-right{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0;}
+.ticker-row{display:flex;align-items:center;gap:6px;}
+.ticker{font-size:17px;font-weight:700;letter-spacing:.5px;}
+.t-pre{color:var(--cyan);}.t-reg{color:var(--text);}.t-after{color:var(--orange);}
+.sess-pill{font-size:8px;font-weight:700;padding:2px 6px;border-radius:3px;letter-spacing:.5px;text-transform:uppercase;border:1px solid;}
+.sp-pre{background:var(--cdim);color:var(--cyan);border-color:var(--cyan);}
+.sp-reg{background:var(--bdim);color:var(--blue);border-color:var(--blue);}
+.sp-after{background:var(--odim);color:var(--orange);border-color:var(--orange);}
+.badge-row{display:flex;flex-wrap:wrap;gap:3px;}
+.badge{font-size:8px;font-weight:700;padding:1px 6px;border-radius:3px;}
+.b-new{color:var(--green);background:var(--gdim);border:1px solid var(--green);}
+.b-news{color:var(--yellow);background:var(--ydim);}
+.b-kw{color:var(--purple);background:var(--pdim);border:1px solid rgba(167,139,250,.35);}
+.chg-pct{font-size:20px;font-weight:700;}
+.up{color:var(--green);}.dn{color:var(--red);}
+.chg-dollar{font-size:12px;font-weight:600;}
+.price-lbl{font-size:12px;color:var(--mid);}
+.card-stats{display:flex;gap:14px;margin-top:8px;flex-wrap:wrap;}
+.stat{display:flex;flex-direction:column;gap:1px;}
+.stat-lbl{font-size:8px;color:var(--dim);letter-spacing:.5px;text-transform:uppercase;}
+.stat-val{font-size:11px;color:var(--mid);}
+.stat-val.hi{color:var(--red);}.stat-val.md{color:var(--yellow);}
+.vol-wrap{display:flex;align-items:center;gap:6px;}
+.vbar-bg{width:50px;height:3px;background:var(--b2);border-radius:2px;overflow:hidden;}
+.vbar-fill{height:100%;border-radius:2px;}
+.news-toggle-row{display:flex;align-items:center;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:10px;color:var(--mid);cursor:pointer;}
+.news-toggle-row .arr{transition:transform .2s;display:inline-block;font-size:9px;}
+.news-toggle-row.open .arr{transform:rotate(180deg);}
+.news-panel{display:none;margin-top:8px;}
+.news-panel.open{display:flex;flex-direction:column;gap:6px;}
+.news-item{padding:8px 10px;border-radius:6px;border-left:2px solid var(--b2);background:var(--bg);}
+.news-item.kw-hit{border-left-color:var(--purple);background:#0e0c1a;}
+.news-hl{font-size:11px;color:var(--text);line-height:1.5;}
+.news-meta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:4px;}
+.news-age{font-size:9px;color:var(--dim);}
+.kw-tags-row{display:flex;gap:3px;flex-wrap:wrap;}
+.kw-hit-tag{font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;background:var(--pdim);color:var(--purple);border:1px solid rgba(167,139,250,.35);}
+.bottom-nav{display:flex;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 4px 12px;cursor:pointer;font-size:9px;color:var(--dim);letter-spacing:.5px;transition:color .15s;border:none;background:transparent;font-family:var(--mono);position:relative;}
+.bnav-item .ico{font-size:20px;line-height:1;}
+.bnav-item.active{color:var(--accent);}
+.bnav-item:active{transform:scale(.9);}
+.badge-count{position:absolute;top:6px;right:calc(50% - 18px);background:var(--purple);color:#fff;font-size:8px;font-weight:700;padding:1px 4px;border-radius:6px;min-width:14px;text-align:center;display:none;}
+.sheet-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:400;display:none;}
+.sheet-overlay.open{display:block;}
+.sheet{position:fixed;bottom:0;left:0;right:0;z-index:500;background:var(--surface);border-radius:18px 18px 0 0;border-top:1px solid var(--border);max-height:80vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s cubic-bezier(.4,0,.2,1);}
+.sheet.open{transform:translateY(0);}
+.sheet-handle{width:36px;height:4px;background:var(--b2);border-radius:2px;margin:12px auto 0;flex-shrink:0;}
+.sheet-header{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 10px;flex-shrink:0;}
+.sheet-title{font-family:var(--sans);font-size:15px;font-weight:800;}
+.sheet-close{background:none;border:none;color:var(--dim);font-size:22px;cursor:pointer;padding:0 4px;line-height:1;}
+.sheet-body{overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 16px 30px;display:flex;flex-direction:column;gap:18px;flex:1;}
+.sec-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--dim);padding-bottom:6px;border-bottom:1px solid var(--border);margin-bottom:2px;}
+.filter-row{display:flex;flex-direction:column;gap:5px;}
+.fl{font-size:11px;color:var(--mid);display:flex;justify-content:space-between;}
+.fv{color:var(--accent);font-weight:700;}
+input[type="range"]{-webkit-appearance:none;width:100%;height:3px;background:var(--b2);border-radius:2px;outline:none;}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--accent);cursor:pointer;box-shadow:0 0 0 3px rgba(56,189,248,.2);}
+.rg{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.ri{display:flex;flex-direction:column;gap:4px;}
+.ri label{font-size:9px;color:var(--dim);}
+.ni{background:var(--s2);border:1px solid var(--b2);color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 10px;border-radius:8px;width:100%;outline:none;}
+.ni:focus{border-color:var(--accent);}
+.tg-group{display:flex;gap:6px;flex-wrap:wrap;}
+.tg{padding:7px 14px;border-radius:8px;border:1px solid var(--b2);background:transparent;color:var(--mid);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s;}
+.tg.active{background:var(--bdim);border-color:var(--blue);color:var(--blue);}
+.switch-row{display:flex;align-items:center;justify-content:space-between;padding:4px 0;}
+.switch-lbl{font-size:12px;color:var(--mid);}
+.sw-wrap{position:relative;width:44px;height:24px;flex-shrink:0;}
+.sw-wrap input{opacity:0;width:0;height:0;}
+.sw-track{position:absolute;cursor:pointer;inset:0;background:var(--b2);border-radius:24px;transition:.2s;}
+.sw-track:before{content:"";position:absolute;height:16px;width:16px;left:4px;top:4px;background:var(--dim);border-radius:50%;transition:.2s;}
+input:checked+.sw-track{background:var(--gdim);border:1px solid var(--green);}
+input:checked+.sw-track:before{transform:translateX(20px);background:var(--green);}
+.kw-grid{display:flex;flex-wrap:wrap;gap:6px;}
+.kw-chip{display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:20px;font-size:10px;font-weight:600;cursor:pointer;border:1px solid;transition:opacity .15s;user-select:none;}
+.kw-chip.off{opacity:.3;}
+.chip-x{opacity:.5;font-size:11px;padding-left:4px;}
+.kw-chip:active .chip-x{opacity:1;}
+.c-bio{background:#0f1e30;border-color:#60a5fa;color:#60a5fa;}
+.c-reg{background:#0d1e15;border-color:#4ade80;color:#4ade80;}
+.c-ma{background:#2a2008;border-color:#fbbf24;color:#fbbf24;}
+.c-tech{background:#1a1530;border-color:#a78bfa;color:#a78bfa;}
+.c-gov{background:#1e1000;border-color:#fb923c;color:#fb923c;}
+.c-short{background:#1e0808;border-color:#f87171;color:#f87171;}
+.kw-cat-title{font-size:10px;font-weight:700;color:var(--mid);margin-bottom:6px;margin-top:4px;}
+.add-kw-row{display:flex;gap:8px;margin-top:4px;}
+.cat-sel{background:var(--s2);border:1px solid var(--b2);color:var(--text);font-family:var(--mono);font-size:11px;padding:8px;border-radius:8px;outline:none;cursor:pointer;}
+.kw-inp{flex:1;background:var(--s2);border:1px solid var(--b2);color:var(--text);font-family:var(--mono);font-size:13px;padding:8px 10px;border-radius:8px;outline:none;}
+.kw-inp:focus{border-color:var(--accent);}
+.add-btn{padding:8px 14px;background:var(--accent);color:#000;border:none;border-radius:8px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;}
+.am-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:12px;color:var(--mid);}
+.am-ni{width:72px;background:var(--s2);border:1px solid var(--purple);color:var(--purple);font-family:var(--mono);font-size:13px;padding:6px 8px;border-radius:6px;outline:none;text-align:center;}
+.am-chk{accent-color:var(--purple);width:18px;height:18px;cursor:pointer;}
+.toast-log{position:fixed;bottom:70px;left:12px;right:12px;display:flex;flex-direction:column;gap:6px;z-index:999;pointer-events:none;}
+.toast{background:var(--surface);border:1px solid var(--purple);border-radius:10px;padding:10px 12px;font-size:11px;color:var(--text);display:flex;align-items:flex-start;gap:9px;box-shadow:0 4px 20px rgba(0,0,0,.6);animation:tIn .3s ease;pointer-events:all;}
+.toast.removing{animation:tOut .25s ease forwards;}
+@keyframes tIn{from{transform:translateY(20px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+@keyframes tOut{to{transform:translateY(20px);opacity:0;}}
+.toast-icon{font-size:18px;flex-shrink:0;}
+.toast-body{flex:1;display:flex;flex-direction:column;gap:3px;}
+.toast-title{font-weight:700;color:var(--purple);font-size:12px;}
+.toast-msg{color:var(--mid);font-size:10px;line-height:1.4;}
+.toast-kws{display:flex;gap:3px;flex-wrap:wrap;margin-top:2px;}
+.toast-close{background:none;border:none;color:var(--dim);cursor:pointer;font-size:16px;padding:0;flex-shrink:0;}
+.sort-bar{display:flex;align-items:center;justify-content:space-between;padding:7px 14px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0;}
+.res-count{font-size:11px;color:var(--dim);}
+.res-count strong{color:var(--accent);font-size:14px;}
+.sort-sel{background:var(--s2);border:1px solid var(--b2);color:var(--text);font-family:var(--mono);font-size:10px;padding:5px 8px;border-radius:6px;outline:none;}
+/* error banner */
+.err-bar{display:none;padding:6px 14px;background:var(--rdim);border-bottom:1px solid var(--red);font-size:10px;color:var(--red);flex-shrink:0;align-items:center;gap:8px;}
+.err-bar.show{display:flex;}
+</style>
+</head>
+<body>
 
-st.set_page_config(page_title="Ultimate Stock Scanner", layout="wide")
-st.title("🚀 Ultimate Market Scanner")
+<div class="topbar">
+  <div class="logo"><div class="logo-icon">⚡</div>Penny<span>Scanner</span></div>
+  <div class="topbar-right">
+    <button class="scan-fab" id="scan-btn" onclick="runScan()">⚡ SCAN</button>
+    <button class="icon-btn" id="notif-icon" onclick="reqNotif()" title="התראות">🔕</button>
+  </div>
+</div>
 
-# פילטרים מהצד
-st.sidebar.header("קריטריונים לסינון")
-max_price = st.sidebar.number_input("מחיר מקסימלי:", value=5.0)
-min_vol = st.sidebar.number_input("ווליום מינימלי (במיליונים):", value=2.0)
+<div class="sess-tabs">
+  <button class="stab all active" onclick="setSession('all')">🌐 ALL</button>
+  <button class="stab pre" onclick="setSession('pre')">🌅 PRE</button>
+  <button class="stab reg" onclick="setSession('reg')">📈 REG</button>
+  <button class="stab after" onclick="setSession('after')">🌙 AFTER</button>
+</div>
 
-# רשימה מייצגת של מאות מניות (כדי לא להפיל את השרת)
-# ניתן להרחיב את הרשימה הזו לכל מניה שקיימת בבורסה
-tickers_to_scan = ["AAPL", "AMD", "NVDA", "PLTR", "MULN", "SNDL", "AMC", "GME", "TSLA", "MARA", "RIOT", "FSR", "WISH", "COIN", "SOFI"]
+<div class="ar-bar" id="ar-bar">
+  <span>⟳ Auto Refresh פעיל</span>
+  <span class="ar-ctr" id="ar-ctr">15s</span>
+</div>
 
-def run_scanner():
-    results = []
-    # התקדמות בזמן אמת כדי שתראה שזה עובד
-    progress_bar = st.progress(0)
-    for i, t in enumerate(tickers_to_scan):
-        try:
-            stock = yf.Ticker(t)
-            # שימוש ב-fast_info לביצועים מהירים מאוד
-            info = stock.fast_info
-            price = info.last_price
-            vol = info.volume / 1000000
-            
-            if price <= max_price and vol >= min_vol:
-                results.append({"Ticker": t, "Price": price, "Volume (M)": round(vol, 2)})
-            
-            progress_bar.progress((i + 1) / len(tickers_to_scan))
-        except:
-            continue
-    return pd.DataFrame(results)
+<div class="err-bar" id="err-bar">⚠️ <span id="err-msg"></span></div>
 
-if st.button("סרוק את כל השוק עכשיו"):
-    df = run_scanner()
-    if not df.empty:
-        st.dataframe(df.sort_values(by="Volume (M)", ascending=False))
-    else:
-        st.write("לא נמצאו מניות שעומדות בתנאים.")
+<div class="sort-bar">
+  <div class="res-count">מציג <strong id="result-num">0</strong> מניות</div>
+  <select class="sort-sel" id="sort-by" onchange="sortResults()">
+    <option value="chg">% שינוי ↓</option>
+    <option value="chgd">$ שינוי ↓</option>
+    <option value="vol">Volume ↓</option>
+    <option value="kwScore">KW Score ↓</option>
+    <option value="price">מחיר ↑</option>
+  </select>
+</div>
+
+<div class="stock-list" id="stock-list">
+  <div class="empty-state">
+    <div class="empty-icon">📡</div>
+    <div class="empty-text">לחץ <strong style="color:var(--accent)">⚡ SCAN</strong><br>לחיפוש מניות</div>
+  </div>
+</div>
+
+<div class="bottom-nav">
+  <button class="bnav-item active" id="nav-scan" onclick="showSheet('scan')">
+    <div class="ico">🎛️</div>פילטרים
+  </button>
+  <button class="bnav-item" id="nav-kw" onclick="showSheet('kw')">
+    <div class="ico">🔑</div>מילות מפתח
+    <div class="badge-count" id="kw-badge">0</div>
+  </button>
+  <button class="bnav-item" id="nav-alert" onclick="showSheet('alert')">
+    <div class="ico">🔔</div>התראות
+  </button>
+</div>
+
+<div class="sheet-overlay" id="sheet-overlay" onclick="closeSheet()"></div>
+
+<div class="sheet" id="sheet-scan">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title">🎛️ פילטרים</div>
+    <button class="sheet-close" onclick="closeSheet()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div>
+      <div class="sec-title">Float (M)</div>
+      <div class="filter-row" style="margin-top:8px">
+        <div class="fl"><span>Min Float</span><span class="fv" id="fmin-v">0.1M</span></div>
+        <input type="range" id="fmin" min="0.1" max="30" step="0.1" value="0.1" oninput="saveFilters()">
+      </div>
+      <div class="filter-row" style="margin-top:10px">
+        <div class="fl"><span>Max Float</span><span class="fv" id="fmax-v">20M</span></div>
+        <input type="range" id="fmax" min="1" max="60" step="0.5" value="60" oninput="saveFilters()">
+      </div>
+    </div>
+    <div>
+      <div class="sec-title">% שינוי</div>
+      <div class="rg" style="margin-top:8px">
+        <div class="ri"><label>MIN %</label><input type="number" class="ni" id="cmin" value="5" onchange="saveFilters()"></div>
+        <div class="ri"><label>MAX %</label><input type="number" class="ni" id="cmax" value="5000" onchange="saveFilters()"></div>
+      </div>
+    </div>
+    <div>
+      <div class="sec-title">שינוי ($)</div>
+      <div class="rg" style="margin-top:8px">
+        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="cdmin" value="0.3" step="0.1" onchange="saveFilters()"></div>
+        <div class="ri"><label>MAX $</label><input type="number" class="ni" id="cdmax" value="50" onchange="saveFilters()"></div>
+      </div>
+    </div>
+    <div>
+      <div class="sec-title">Volume (M)</div>
+      <div class="rg" style="margin-top:8px">
+        <div class="ri"><label>MIN</label><input type="number" class="ni" id="vmin" value="0.1" step="0.1" onchange="saveFilters()"></div>
+        <div class="ri"><label>MAX</label><input type="number" class="ni" id="vmax" value="999" step="10" onchange="saveFilters()"></div>
+      </div>
+    </div>
+    <div>
+      <div class="sec-title">מחיר ($)</div>
+      <div class="rg" style="margin-top:8px">
+        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="pmin" value="0.1" step="0.1" onchange="saveFilters()"></div>
+        <div class="ri"><label>MAX $</label><input type="number" class="ni" id="pmax" value="50" onchange="saveFilters()"></div>
+      </div>
+    </div>
+    <div>
+      <div class="sec-title">Market Cap (M)</div>
+      <div class="rg" style="margin-top:8px">
+        <div class="ri"><label>MIN</label><input type="number" class="ni" id="mmin" value="1" onchange="saveFilters()"></div>
+        <div class="ri"><label>MAX</label><input type="number" class="ni" id="mmax" value="999" onchange="saveFilters()"></div>
+      </div>
+    </div>
+    <div>
+      <div class="sec-title">Short Interest Max</div>
+      <div class="filter-row" style="margin-top:8px">
+        <div class="fl"><span>Max Short %</span><span class="fv" id="smax-v">50%</span></div>
+        <input type="range" id="smax" min="0" max="100" step="1" value="50" oninput="saveFilters()">
+      </div>
+    </div>
+    <div>
+      <div class="sec-title">חדשות</div>
+      <div class="tg-group" style="margin-top:8px">
+        <button class="tg active" data-news="any">Any</button>
+        <button class="tg" data-news="1d">היום</button>
+        <button class="tg" data-news="3d">3 ימים</button>
+        <button class="tg" data-news="7d">שבוע</button>
+      </div>
+    </div>
+    <div>
+      <div class="sec-title">Auto Refresh</div>
+      <div class="switch-row" style="margin-top:8px">
+        <span class="switch-lbl">רענון אוטומטי כל 15 שניות</span>
+        <label class="sw-wrap"><input type="checkbox" id="ar-toggle" onchange="toggleAR()"><span class="sw-track"></span></label>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="sheet-kw">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title">🔑 מילות מפתח</div>
+    <button class="sheet-close" onclick="closeSheet()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div style="font-size:11px;color:var(--mid);line-height:1.6">לחץ על מילה לכיבוי/הדלקה · X למחיקה · הוסף מילות משלך למטה</div>
+    <div id="kw-bio-sec"><div class="kw-cat-title">🔵 ביו / קליני</div><div class="kw-grid" id="kw-bio"></div></div>
+    <div id="kw-reg-sec"><div class="kw-cat-title">🟢 רגולציה FDA</div><div class="kw-grid" id="kw-reg"></div></div>
+    <div id="kw-ma-sec"><div class="kw-cat-title">🟡 M&A / עסקאות</div><div class="kw-grid" id="kw-ma"></div></div>
+    <div id="kw-tech-sec"><div class="kw-cat-title">🟣 טכנולוגיה / AI</div><div class="kw-grid" id="kw-tech"></div></div>
+    <div id="kw-gov-sec"><div class="kw-cat-title">🟠 ממשלה / DoD</div><div class="kw-grid" id="kw-gov"></div></div>
+    <div id="kw-short-sec"><div class="kw-cat-title">🔴 שורט / דילול</div><div class="kw-grid" id="kw-short"></div></div>
+    <div>
+      <div class="sec-title">➕ הוסף מילה</div>
+      <div class="add-kw-row" style="margin-top:8px">
+        <select class="cat-sel" id="new-kw-cat">
+          <option value="bio">ביו</option><option value="reg">FDA</option>
+          <option value="ma">M&A</option><option value="tech">Tech</option>
+          <option value="gov">Gov</option><option value="short">Short</option>
+        </select>
+        <input type="text" class="kw-inp" id="new-kw-inp" placeholder="מילה חדשה..." onkeydown="if(event.key==='Enter')addKw()">
+        <button class="add-btn" onclick="addKw()">+</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="sheet" id="sheet-alert">
+  <div class="sheet-handle"></div>
+  <div class="sheet-header">
+    <div class="sheet-title">🔔 הגדרות התראות</div>
+    <button class="sheet-close" onclick="closeSheet()">✕</button>
+  </div>
+  <div class="sheet-body">
+    <div>
+      <div class="sec-title">סינון התראות</div>
+      <div class="am-row"><span>שלח רק על מניות עם KW</span><input type="checkbox" class="am-chk" id="al-kw" checked onchange="saveAlertSettings()"></div>
+      <div class="am-row"><span>שלח רק על מניות עם חדשות</span><input type="checkbox" class="am-chk" id="al-news" onchange="saveAlertSettings()"></div>
+    </div>
+    <div>
+      <div class="sec-title">סף מינימום</div>
+      <div class="am-row"><span>מינ׳ % שינוי</span><input type="number" class="am-ni" id="al-chg" value="30" onchange="saveAlertSettings()"></div>
+      <div class="am-row"><span>מינ׳ Volume (M)</span><input type="number" class="am-ni" id="al-vol" value="3" step="0.5" onchange="saveAlertSettings()"></div>
+    </div>
+    <div>
+      <div class="sec-title">Session</div>
+      <div class="am-row"><span>🌅 Pre-Market</span><input type="checkbox" class="am-chk" id="al-pre" checked onchange="saveAlertSettings()"></div>
+      <div class="am-row"><span>📈 Regular Hours</span><input type="checkbox" class="am-chk" id="al-reg" checked onchange="saveAlertSettings()"></div>
+      <div class="am-row"><span>🌙 After Hours</span><input type="checkbox" class="am-chk" id="al-after" checked onchange="saveAlertSettings()"></div>
+    </div>
+    <div>
+      <div class="sec-title">Push Notifications</div>
+      <div style="font-size:11px;color:var(--mid);line-height:1.7;margin-top:6px">לחץ על כפתור 🔔 בראש הדף כדי להפעיל/לכבות התראות לדפדפן ולנייד.</div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-log" id="toast-log"></div>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  KEYWORDS
+// ══════════════════════════════════════════════════════
+const KW_DEF={
+  bio:['phase 1','phase 2','phase 3','phase ii','phase iii','clinical trial','cancer','tumor','oncology','rare disease','orphan drug','biotech','pivotal','efficacy','data readout'],
+  reg:['fda','fda approval','pdufa','nda','bla','ind','breakthrough','fast track','priority review','clearance','accelerated approval','510k'],
+  ma:['merger','acquisition','buyout','partnership','deal','agreement','joint venture','stake','takeover','loi'],
+  tech:['ai','artificial intelligence','patent','platform','launch','technology','software'],
+  gov:['contract','government','dod','defense','military','grant','award','nasa','pentagon'],
+  short:['short squeeze','short interest','dilution','offering','warrant','atm offering'],
+};
+const CAT_CLS={bio:'c-bio',reg:'c-reg',ma:'c-ma',tech:'c-tech',gov:'c-gov',short:'c-short'};
+let kws={};
+
+if(localStorage.getItem('ps_kws')){
+  try{kws=JSON.parse(localStorage.getItem('ps_kws'));}catch(e){initKws();}
+}else{initKws();}
+
+function initKws(){kws={};Object.keys(KW_DEF).forEach(c=>{kws[c]=KW_DEF[c].map(w=>({w,on:true}));});saveKws();}
+function saveKws(){localStorage.setItem('ps_kws',JSON.stringify(kws));}
+function renderKws(){
+  Object.keys(kws).forEach(cat=>{
+    const el=document.getElementById('kw-'+cat);if(!el)return;
+    el.innerHTML=kws[cat].map((k,i)=>`<div class="kw-chip ${CAT_CLS[cat]} ${k.on?'':'off'}" onclick="toggleKw('${cat}',${i})">${k.w}<span class="chip-x" onclick="rmKw(event,'${cat}',${i})"> ✕</span></div>`).join('');
+  });
+  const total=Object.values(kws).flat().filter(k=>k.on).length;
+  const badge=document.getElementById('kw-badge');
+  badge.textContent=total;badge.style.display=total?'block':'none';
+}
+function toggleKw(cat,i){kws[cat][i].on=!kws[cat][i].on;saveKws();renderKws();applyFilters();}
+function rmKw(e,cat,i){e.stopPropagation();kws[cat].splice(i,1);saveKws();renderKws();applyFilters();}
+function addKw(){
+  const cat=document.getElementById('new-kw-cat').value;
+  const val=document.getElementById('new-kw-inp').value.trim().toLowerCase();
+  if(!val)return;kws[cat].push({w:val,on:true});
+  document.getElementById('new-kw-inp').value='';saveKws();renderKws();applyFilters();
+}
+function getActiveKws(){return Object.values(kws).flat().filter(k=>k.on).map(k=>k.w);}
+function matchKws(headlines){
+  const active=getActiveKws();
+  const text=(headlines||[]).join(' ').toLowerCase();
+  return active.filter(kw=>text.includes(kw));
+}
+
+// ══════════════════════════════════════════════════════
+//  SHEETS
+// ══════════════════════════════════════════════════════
+let currentSheet=null;
+function showSheet(name){
+  closeSheet(false);
+  document.getElementById('sheet-overlay').classList.add('open');
+  document.getElementById('sheet-'+name).classList.add('open');
+  currentSheet=name;
+  document.querySelectorAll('.bnav-item').forEach(b=>b.classList.remove('active'));
+  const nb=document.getElementById('nav-'+name);if(nb)nb.classList.add('active');
+  if(name==='kw')renderKws();
+}
+function closeSheet(){
+  document.getElementById('sheet-overlay').classList.remove('open');
+  ['scan','kw','alert'].forEach(n=>document.getElementById('sheet-'+n).classList.remove('open'));
+  currentSheet=null;
+}
+
+// ══════════════════════════════════════════════════════
+//  SESSION
+// ══════════════════════════════════════════════════════
+let currentSession='all';
+function setSession(s){
+  currentSession=s;
+  document.querySelectorAll('.stab').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.stab.'+s).classList.add('active');
+  applyFilters();
+}
+
+// ══════════════════════════════════════════════════════
+//  FILTERS — SAVE/LOAD
+// ══════════════════════════════════════════════════════
+function saveFilters(){
+  const f={fmin:document.getElementById('fmin').value,fmax:document.getElementById('fmax').value,cmin:document.getElementById('cmin').value,cmax:document.getElementById('cmax').value,cdmin:document.getElementById('cdmin').value,cdmax:document.getElementById('cdmax').value,vmin:document.getElementById('vmin').value,vmax:document.getElementById('vmax').value,pmin:document.getElementById('pmin').value,pmax:document.getElementById('pmax').value,mmin:document.getElementById('mmin').value,mmax:document.getElementById('mmax').value,smax:document.getElementById('smax').value,news:newsFilter,ar:document.getElementById('ar-toggle').checked};
+  localStorage.setItem('ps_filters',JSON.stringify(f));
+  updateSliderLabels();applyFilters();
+}
+function loadFilters(){
+  const stored=localStorage.getItem('ps_filters');
+  if(!stored){updateSliderLabels();return;}
+  try{
+    const f=JSON.parse(stored);
+    ['fmin','fmax','cmin','cmax','cdmin','cdmax','vmin','vmax','pmin','pmax','mmin','mmax','smax'].forEach(id=>{if(f[id]!==undefined)document.getElementById(id).value=f[id];});
+    newsFilter=f.news||'any';
+    document.getElementById('ar-toggle').checked=f.ar||false;
+    document.querySelectorAll('[data-news]').forEach(x=>x.classList.remove('active'));
+    const ab=document.querySelector(`[data-news="${newsFilter}"]`);if(ab)ab.classList.add('active');
+    toggleAR();
+  }catch(e){}
+  updateSliderLabels();
+}
+function updateSliderLabels(){
+  document.getElementById('fmin-v').textContent=parseFloat(document.getElementById('fmin').value).toFixed(1)+'M';
+  document.getElementById('fmax-v').textContent=parseFloat(document.getElementById('fmax').value).toFixed(1)+'M';
+  document.getElementById('smax-v').textContent=document.getElementById('smax').value+'%';
+}
+document.getElementById('fmin').addEventListener('input',updateSliderLabels);
+document.getElementById('fmax').addEventListener('input',updateSliderLabels);
+document.getElementById('smax').addEventListener('input',updateSliderLabels);
+
+let newsFilter='any';
+document.querySelectorAll('[data-news]').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('[data-news]').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');newsFilter=b.dataset.news;saveFilters();
+}));
+
+function saveAlertSettings(){
+  const a={kw:document.getElementById('al-kw').checked,news:document.getElementById('al-news').checked,chg:document.getElementById('al-chg').value,vol:document.getElementById('al-vol').value,pre:document.getElementById('al-pre').checked,reg:document.getElementById('al-reg').checked,after:document.getElementById('al-after').checked};
+  localStorage.setItem('ps_alerts',JSON.stringify(a));
+}
+function loadAlertSettings(){
+  const stored=localStorage.getItem('ps_alerts');if(!stored)return;
+  try{
+    const a=JSON.parse(stored);
+    document.getElementById('al-kw').checked=a.kw!==undefined?a.kw:true;
+    document.getElementById('al-news').checked=a.news!==undefined?a.news:false;
+    document.getElementById('al-chg').value=a.chg||30;
+    document.getElementById('al-vol').value=a.vol||3;
+    document.getElementById('al-pre').checked=a.pre!==undefined?a.pre:true;
+    document.getElementById('al-reg').checked=a.reg!==undefined?a.reg:true;
+    document.getElementById('al-after').checked=a.after!==undefined?a.after:true;
+  }catch(e){}
+}
+
+// ══════════════════════════════════════════════════════
+//  AUTO REFRESH
+// ══════════════════════════════════════════════════════
+let arTimer=null,arCd=0;
+function toggleAR(){
+  const on=document.getElementById('ar-toggle').checked;
+  document.getElementById('ar-bar').classList.toggle('show',on);
+  if(on)startAR();else{if(arTimer)clearInterval(arTimer);arTimer=null;}
+}
+function startAR(){arCd=15;updAR();if(arTimer)clearInterval(arTimer);arTimer=setInterval(()=>{arCd--;updAR();if(arCd<=0){arCd=15;runScan();}},1000);}
+function updAR(){document.getElementById('ar-ctr').textContent=arCd+'s';}
+
+// ══════════════════════════════════════════════════════
+//  NOTIFICATIONS
+// ══════════════════════════════════════════════════════
+let alertedSet=new Set();
+async function reqNotif(){
+  if(typeof Notification==='undefined'||!('Notification'in window)){alert('התראות לא נתמכות בדפדפן זה');return;}
+  if(Notification.permission==='granted'){alertedSet.clear();setNotifIcon(false);return;}
+  const p=await Notification.requestPermission();
+  setNotifIcon(p==='granted');
+  if(p==='granted')setTimeout(()=>pushN('⚡ PennyScanner','התראות מופעלות!',''),500);
+}
+function setNotifIcon(on){
+  const b=document.getElementById('notif-icon');
+  b.textContent=on?'🔔':'🔕';b.classList.toggle('notif-on',on);
+}
+function pushN(title,body,tag){
+  if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  const n=new Notification(title,{body,tag:tag||'ps'});
+  n.onclick=()=>{window.focus();n.close();};setTimeout(()=>n.close(),8000);
+}
+function showToast(s){
+  const log=document.getElementById('toast-log');
+  const t=document.createElement('div');t.className='toast';
+  const kwtags=(s.kwHits||[]).slice(0,3).map(k=>`<span class="kw-hit-tag">${k}</span>`).join('');
+  t.innerHTML=`<div class="toast-icon">🚀</div><div class="toast-body"><div class="toast-title">${s.ticker} ▲${s.chg.toFixed(1)}%</div><div class="toast-kws">${kwtags}</div><div class="toast-msg">$${s.price.toFixed(2)} | +$${s.chgd.toFixed(2)} | Vol ${s.vol.toFixed(1)}M</div></div><button class="toast-close" onclick="rmToast(this.parentElement)">✕</button>`;
+  log.appendChild(t);setTimeout(()=>rmToast(t),9000);
+}
+function rmToast(el){el.classList.add('removing');setTimeout(()=>el.remove(),300);}
+function checkAlerts(results){
+  if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  const kwOnly=document.getElementById('al-kw').checked;
+  const newsOnly=document.getElementById('al-news').checked;
+  const minChg=+document.getElementById('al-chg').value||0;
+  const minVol=+document.getElementById('al-vol').value||0;
+  const sessOk={pre:document.getElementById('al-pre').checked,reg:document.getElementById('al-reg').checked,after:document.getElementById('al-after').checked};
+  results.forEach(s=>{
+    const key=s.ticker+s.sess;
+    if(alertedSet.has(key))return;
+    if(s.chg<minChg||s.vol<minVol)return;
+    if(kwOnly&&(!s.kwHits||!s.kwHits.length))return;
+    if(newsOnly&&s.news==='any')return;
+    if(!sessOk[s.sess])return;
+    alertedSet.add(key);
+    pushN(`⚡ ${s.ticker} ▲${s.chg.toFixed(1)}%`,`$${s.price.toFixed(2)} +$${s.chgd.toFixed(2)} Vol ${s.vol.toFixed(1)}M`+(s.kwHits&&s.kwHits.length?' | '+s.kwHits.slice(0,2).join(', '):''),key);
+    showToast(s);
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  LIVE DATA ENGINE
+// ══════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════
+//  DATA ENGINE — Claude AI (no proxy needed)
+// ══════════════════════════════════════════════════════
+
+async function fetchFromClaude(prompt) {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!response.ok) throw new Error('Claude API error ' + response.status);
+  const data = await response.json();
+  const text = data.content.map(b => b.text || '').join('');
+  // Strip markdown fences
+  let clean = text.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim();
+  // If JSON was cut off, try to recover by truncating to last complete object
+  if (!clean.endsWith(']')) {
+    const lastBrace = clean.lastIndexOf('}');
+    if (lastBrace !== -1) clean = clean.slice(0, lastBrace + 1) + ']';
+  }
+  return clean;
+}
+
+async function fetchTopGainers() {
+  const sess = getMarketSession();
+  console.log('📡 מנסה Claude AI...');
+  const today = new Date().toISOString().slice(0,10);
+  const prompt = `You are a stock market data formatter. Output ONLY raw JSON, no text before or after.
+
+Generate a JSON array of 10 small-cap US stocks that had notable gains recently. Use well-known penny stock tickers that have been active in the past few months (real symbols like MULN, BBIG, ATER, PROG, CLOV, SPCE, IDEX, TPVG, SNDL, GFAI, MRIN, NVAX, ENDP, NKLA, WKHS, etc).
+
+Format each item exactly like this example:
+[{"ticker":"MULN","price":0.85,"chg":18.5,"chgd":0.13,"vol":45.2,"float":8.3,"mcap":180,"short":12,"headlines":["Mullen Automotive announces new dealer partnership","MULN shares surge on production news"],"news":"1d"}]
+
+Return array of 10 such objects. Output only the JSON array starting with [ and ending with ].`;
+
+  const raw = await fetchFromClaude(prompt);
+  let arr;
+  try {
+    arr = JSON.parse(raw);
+  } catch(e) {
+    console.warn('JSON parse failed, trying repair...', e.message);
+    // Try to extract array from partial response
+    const match = raw.match(/\[.*\]/s);
+    if (match) arr = JSON.parse(match[0]);
+    else throw new Error('לא ניתן לנתח JSON מ-Claude: ' + e.message);
+  }
+  if (!Array.isArray(arr) || arr.length === 0) throw new Error('Claude לא החזיר מניות');
+  console.log('✅ Claude AI:', arr.length, 'מניות');
+  return arr;
+}
+
+// Session detection based on current NY time
+function getMarketSession(){
+  const now = new Date();
+  const ny = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  const h = ny.getHours(), m = ny.getMinutes();
+  const mins = h*60+m, day = ny.getDay();
+  if(day===0||day===6) return 'after';
+  if(mins>=240 && mins<570)  return 'pre';
+  if(mins>=570 && mins<960)  return 'reg';
+  if(mins>=960 && mins<1200) return 'after';
+  return 'after';
+}
+
+// ══════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════
+let liveStocks = [];   // raw enriched stocks from API
+let currentResults = [], seenSet = new Set();
+
+function showErr(msg){
+  const bar=document.getElementById('err-bar');
+  document.getElementById('err-msg').textContent=msg;
+  bar.classList.add('show');
+  setTimeout(()=>bar.classList.remove('show'),6000);
+}
+
+// ══════════════════════════════════════════════════════
+//  SCAN — main entry point
+// ══════════════════════════════════════════════════════
+async function runScan(){
+  const btn=document.getElementById('scan-btn');
+  btn.classList.add('scanning');btn.textContent='◉ סורק...';
+  document.getElementById('stock-list').innerHTML=`
+    <div class="spinner-wrap">
+      <div class="spinner"></div>
+      <div class="spin-lbl">מושך נתונים חיים...</div>
+      <div class="spin-sub">Claude AI · Real-time market data</div>
+    </div>`;
+
+  try{
+    // 1. Fetch top gainers + news via Claude AI (returns complete stock objects)
+    const stocks = await fetchTopGainers();
+    if(!stocks.length) throw new Error('Claude AI לא החזיר נתונים');
+
+    // 2. Normalize fields and assign session
+    const sess = getMarketSession();
+    liveStocks = stocks.map(q => ({
+      ticker:    q.ticker || '?',
+      sess:      q.sess || sess,
+      price:     +q.price || 0,
+      chg:       +q.chg || 0,
+      chgd:      +q.chgd || 0,
+      vol:       +q.vol || 0,
+      mcap:      +q.mcap || 0,
+      float:     +q.float || 5,
+      short:     +q.short || 0,
+      news:      q.news || 'any',
+      headlines: Array.isArray(q.headlines) ? q.headlines : [],
+    }));
+
+    // 3. Render
+    applyFilters();
+
+  }catch(err){
+    console.error('Scan error:', err);
+    showErr('שגיאה: ' + err.message);
+    document.getElementById('stock-list').innerHTML=`
+      <div class="empty-state">
+        <div class="empty-icon">⚠️</div>
+        <div class="empty-text">לא ניתן לטעון נתונים<br><span style="font-size:11px;color:var(--dim)">${err.message}</span></div>
+      </div>`;
+  }finally{
+    btn.classList.remove('scanning');btn.textContent='⚡ SCAN';
+    if(document.getElementById('ar-toggle').checked)startAR();
+  }
+}
+
+// ══════════════════════════════════════════════════════
+//  FILTER & DISPLAY
+// ══════════════════════════════════════════════════════
+function applyFilters(){
+  const fMin=+document.getElementById('fmin').value, fMax=+document.getElementById('fmax').value;
+  const cMin=+document.getElementById('cmin').value,  cMax=+document.getElementById('cmax').value;
+  const cdMin=+document.getElementById('cdmin').value,cdMax=+document.getElementById('cdmax').value;
+  const vMin=+document.getElementById('vmin').value,  vMax=+document.getElementById('vmax').value;
+  const pMin=+document.getElementById('pmin').value,  pMax=+document.getElementById('pmax').value;
+  const mMin=+document.getElementById('mmin').value,  mMax=+document.getElementById('mmax').value;
+  const sMax=+document.getElementById('smax').value;
+  const newsMap={'1d':1,'3d':3,'7d':7,'any':999};
+  const newsLim=newsMap[newsFilter]||999;
+  function newsOk(n){return(newsMap[n]||999)<=newsLim;}
+
+  // DEBUG
+  console.log('📊 מניות מהשרת לפני סינון:', liveStocks.length);
+  liveStocks.slice(0,10).forEach(s=>console.log(`  ${s.ticker} chg:${s.chg.toFixed(1)}% price:$${s.price} vol:${s.vol.toFixed(2)}M float:${s.float.toFixed(2)}M mcap:$${s.mcap.toFixed(0)}M`));
+  console.log(`פילטרים: chg[${cMin}-${cMax}]% | vol[${vMin}-${vMax}]M | price[$${pMin}-$${pMax}] | float[${fMin}-${fMax}]M | mcap[$${mMin}-$${mMax}]M`);
+
+  let pool = liveStocks.filter(s=>{
+    if(currentSession!=='all' && s.sess!==currentSession) return false;
+    const ok =
+      s.chg   >= cMin && s.chg   <= cMax &&
+      s.vol   >= vMin && s.vol   <= vMax &&
+      s.price >= pMin && s.price <= pMax &&
+      newsOk(s.news);
+    if(!ok){
+      const r=[];
+      if(s.float<fMin||s.float>fMax) r.push(`float:${s.float.toFixed(2)} !in [${fMin}-${fMax}]`);
+      if(s.chg<cMin||s.chg>cMax)     r.push(`chg:${s.chg.toFixed(1)}% !in [${cMin}-${cMax}]`);
+      if(s.vol<vMin||s.vol>vMax)      r.push(`vol:${s.vol.toFixed(2)}M !in [${vMin}-${vMax}]`);
+      if(s.price<pMin||s.price>pMax)  r.push(`price:$${s.price} !in [${pMin}-${pMax}]`);
+      if(s.mcap<mMin||s.mcap>mMax)    r.push(`mcap:$${s.mcap.toFixed(0)}M !in [${mMin}-${mMax}]`);
+      if(s.short>sMax)                r.push(`short:${s.short.toFixed(1)}%>${sMax}%`);
+      console.warn(`❌ ${s.ticker}: ${r.join(' | ')}`);
+    }
+    return ok;
+  });
+  console.log('✅ אחרי סינון:', pool.length);
+
+  pool = pool.map(s=>{
+    const hits = matchKws(s.headlines||[]);
+    const key  = s.ticker+s.sess;
+    const isNew = !seenSet.has(key);
+    if(isNew) seenSet.add(key);
+    return{...s, kwHits:hits, kwScore:hits.length, isNew};
+  });
+
+  // Sort by kwScore by default so keyword hits surface first
+  pool.sort((a,b)=>b.kwScore-a.kwScore||b.chg-a.chg);
+
+  currentResults = pool;
+  sortResults(true);
+  checkAlerts(currentResults);
+}
+
+function sortResults(skip){
+  const by=document.getElementById('sort-by').value;
+  const dir={chg:-1,chgd:-1,vol:-1,kwScore:-1,price:1};
+  currentResults.sort((a,b)=>((a[by]||0)-(b[by]||0))*(dir[by]||-1));
+  renderResults();
+}
+
+// ══════════════════════════════════════════════════════
+//  RENDER
+// ══════════════════════════════════════════════════════
+const SESS_PILL_CLS={pre:'sp-pre',reg:'sp-reg',after:'sp-after'};
+const SESS_LBL={pre:'PRE',reg:'REG',after:'AFTER'};
+const T_CLS={pre:'t-pre',reg:'t-reg',after:'t-after'};
+const VOL_COL={pre:'#22d3ee',reg:'#60a5fa',after:'#fb923c'};
+
+function renderResults(){
+  const list=document.getElementById('stock-list');
+  document.getElementById('result-num').textContent=currentResults.length;
+  if(!currentResults.length){
+    list.innerHTML='<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-text">אין מניות — שנה פילטרים<br><span style="font-size:11px;color:var(--dim)">נסה להרחיב טווחי Float/Volume</span></div></div>';
+    return;
+  }
+  const maxVol=Math.max(...currentResults.map(s=>s.vol));
+  list.innerHTML=currentResults.map((s,i)=>{
+    const up=s.chg>=0;
+    const d=Math.min(i*15,300);
+    const sc=s.short>20?'hi':s.short>10?'md':'';
+    const vp=(s.vol/maxVol*100).toFixed(0);
+    const vc=VOL_COL[s.sess]||'#60a5fa';
+    const bNew=s.isNew?`<span class="badge b-new">NEW</span>`:'';
+    const bNews=s.news!=='any'?`<span class="badge b-news">NEWS ${s.news}</span>`:'';
+    const bKws=(s.kwHits||[]).slice(0,2).map(k=>`<span class="badge b-kw">${k}</span>`).join('');
+
+    const newsItems=(s.headlines||[]).map(h=>{
+      const hl=h.toLowerCase();
+      const hits=(s.kwHits||[]).filter(k=>hl.includes(k));
+      return `<div class="news-item ${hits.length?'kw-hit':''}">
+        <div class="news-hl">${h}</div>
+        <div class="news-meta">
+          <span class="news-age">${s.news==='any'?'—':s.news+' ago'}</span>
+          ${hits.length?`<div class="kw-tags-row">${hits.map(k=>`<span class="kw-hit-tag">${k}</span>`).join('')}</div>`:''}
+        </div>
+      </div>`;
+    }).join('');
+
+    const hasH=s.headlines&&s.headlines.length>0;
+    const newsToggle=hasH?`<div class="news-toggle-row" id="nt-${i}" onclick="toggleNews(${i})">📰 ${s.headlines.length} headline${s.headlines.length>1?'s':''} <span class="arr">▼</span></div>`:'';
+
+    const sessClass = T_CLS[s.sess]||'t-reg';
+    const sessPill  = SESS_PILL_CLS[s.sess]||'sp-reg';
+    const sessLbl   = SESS_LBL[s.sess]||'REG';
+
+    return `<div class="stock-card ${s.isNew?'new-card':''}" style="animation-delay:${d}ms">
+      <div class="card-top">
+        <div class="card-left">
+          <div class="ticker-row">
+            <span class="ticker ${sessClass}">${s.ticker}</span>
+            <span class="sess-pill ${sessPill}">${sessLbl}</span>
+          </div>
+          <div class="badge-row">${bNew}${bNews}${bKws}</div>
+        </div>
+        <div class="card-right">
+          <div class="chg-pct ${up?'up':'dn'}">${up?'▲':'▼'}${Math.abs(s.chg).toFixed(2)}%</div>
+          <div class="chg-dollar ${up?'up':'dn'}">${up?'+':'-'}$${Math.abs(s.chgd).toFixed(2)}</div>
+          <div class="price-lbl">$${s.price.toFixed(2)}</div>
+        </div>
+      </div>
+      <div class="card-stats">
+        <div class="stat">
+          <div class="stat-lbl">Volume</div>
+          <div class="vol-wrap">
+            <div class="stat-val">${s.vol.toFixed(1)}M</div>
+            <div class="vbar-bg"><div class="vbar-fill" style="width:${vp}%;background:${vc}"></div></div>
+          </div>
+        </div>
+        <div class="stat"><div class="stat-lbl">Float</div><div class="stat-val">${s.float.toFixed(2)}M</div></div>
+        <div class="stat"><div class="stat-lbl">MCAP</div><div class="stat-val">$${s.mcap.toFixed(1)}M</div></div>
+        <div class="stat"><div class="stat-lbl">Short</div><div class="stat-val ${sc}">${s.short.toFixed(1)}%</div></div>
+      </div>
+      ${newsToggle}
+      <div class="news-panel" id="np-${i}">${newsItems}</div>
+    </div>`;
+  }).join('');
+}
+
+function toggleNews(i){
+  const p=document.getElementById('np-'+i),t=document.getElementById('nt-'+i);
+  const o=p.classList.contains('open');
+  p.classList.toggle('open',!o);if(t)t.classList.toggle('open',!o);
+}
+
+// ══════════════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded',()=>{
+  loadFilters();
+  loadAlertSettings();
+  renderKws();
+  setNotifIcon(typeof Notification!=='undefined'&&Notification.permission==='granted');
+  // Don't auto-scan — wait for user to press SCAN
+});
+</script>
+</body>
+</html>
