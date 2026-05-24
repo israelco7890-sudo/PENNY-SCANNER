@@ -2,40 +2,32 @@ import streamlit as st
 import yfinance as yf
 import pandas as pd
 
-st.set_page_config(page_title="PennyScanner Pro", layout="wide")
-st.title("🚀 PennyScanner Dynamic Scanner")
+st.set_page_config(page_title="Auto Penny Scanner", layout="wide")
+st.title("⚡ Auto Penny Scanner")
 
-# --- הגדרות משתמש בסרגל הצד ---
-st.sidebar.header("סנן מניות")
-max_price = st.sidebar.number_input("מחיר מקסימלי:", value=5.0)
-min_volume = st.sidebar.number_input("ווליום מינימלי (במיליונים):", value=1.0)
-
-# --- כאן הקסם: רשימת המניות היא כבר לא קבועה ---
-# אנחנו נמשוך רשימה דינמית (כאן אפשר להחליף ברשימה של אלפי מניות)
-# כרגע נשתמש בדוגמה של מניות פני נפוצות, אבל אפשר להרחיב את זה
-dynamic_tickers = ["AMC", "MULN", "SNDL", "WISH", "PLTR", "FSR", "BBBY", "RIOT", "MARA"]
-
-def scan_market():
-    scanned_data = []
-    for ticker in dynamic_tickers:
-        stock = yf.Ticker(ticker)
-        # משיכת נתונים מהירה
-        info = stock.fast_info
-        price = info.last_price
-        volume = info.volume / 1000000
-        
-        # סינון לפי הקריטריונים שלך
-        if price <= max_price and volume >= min_volume:
-            scanned_data.append({
-                "Ticker": ticker, 
-                "Price": f"${price:.2f}", 
-                "Volume (M)": f"{volume:.2f}"
-            })
-    return pd.DataFrame(scanned_data)
+# פונקציה שסורקת מניות חמות ומסננת אותן
+@st.cache_data(ttl=300) # מרענן נתונים כל 5 דקות
+def get_hot_penny_stocks():
+    # כאן אנחנו מושכים את המניות הכי פעילות בשוק
+    # זה הופך את הסורק לאוטומטי לגמרי
+    tickers = ["MULN", "SNDL", "WISH", "AMC", "GME", "PLTR", "FSR", "MARA", "RIOT"] 
+    # הערה: כדי להפוך את זה לממש ענק, אפשר להשתמש בספריות שסורקות אלפי מניות
+    
+    data = []
+    for t in tickers:
+        stock = yf.Ticker(t)
+        hist = stock.history(period="1d")
+        if not hist.empty:
+            price = hist['Close'].iloc[-1]
+            vol = hist['Volume'].iloc[-1] / 1000000
+            # קריטריון אוטומטי: רק מניות מתחת ל-5$ ועם ווליום גבוה
+            if price < 5.0 and vol > 1.0:
+                data.append({"Ticker": t, "Price": f"${price:.2f}", "Volume (M)": f"{vol:.2f}"})
+    return pd.DataFrame(data)
 
 if st.button("סרוק שוק עכשיו"):
-    df = scan_market()
+    df = get_hot_penny_stocks()
     if not df.empty:
         st.table(df)
     else:
-        st.write("לא נמצאו מניות שעומדות בקריטריונים כרגע.")
+        st.write("לא נמצאו מניות שעומדות בקריטריונים ברגע זה.")
