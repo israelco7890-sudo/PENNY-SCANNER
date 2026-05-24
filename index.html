@@ -521,7 +521,7 @@ function updAR(){document.getElementById('ar-ctr').textContent=arCd+'s';}
 // ══════════════════════════════════════════════════════
 let alertedSet=new Set();
 async function reqNotif(){
-  if(!('Notification'in window))return;
+  if(typeof Notification==='undefined'||!('Notification'in window)){alert('התראות לא נתמכות בדפדפן זה');return;}
   if(Notification.permission==='granted'){alertedSet.clear();setNotifIcon(false);return;}
   const p=await Notification.requestPermission();
   setNotifIcon(p==='granted');
@@ -532,7 +532,7 @@ function setNotifIcon(on){
   b.textContent=on?'🔔':'🔕';b.classList.toggle('notif-on',on);
 }
 function pushN(title,body,tag){
-  if(Notification.permission!=='granted')return;
+  if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
   const n=new Notification(title,{body,tag:tag||'ps'});
   n.onclick=()=>{window.focus();n.close();};setTimeout(()=>n.close(),8000);
 }
@@ -545,7 +545,7 @@ function showToast(s){
 }
 function rmToast(el){el.classList.add('removing');setTimeout(()=>el.remove(),300);}
 function checkAlerts(results){
-  if(Notification.permission!=='granted')return;
+  if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
   const kwOnly=document.getElementById('al-kw').checked;
   const newsOnly=document.getElementById('al-news').checked;
   const minChg=+document.getElementById('al-chg').value||0;
@@ -569,42 +569,59 @@ function checkAlerts(results){
 // ══════════════════════════════════════════════════════
 
 // ══════════════════════════════════════════════════════
-//  NETWORK LAYER — Retry + Dual-Proxy Fallback
+//  DATA ENGINE — Claude AI (no proxy needed)
 // ══════════════════════════════════════════════════════
 
-// ── Cloudflare Worker Proxy — CORS enabled, no auth required ──
-const CF_PROXY = 'https://quiet-snowflake-f1fb.israelco7890.workers.dev/?url=';
-
-// Simple timeout via Promise.race — no AbortSignal, max browser compat
-function withTimeout(promise, ms) {
-  return Promise.race([
-    promise,
-    new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, ms); })
-  ]);
+async function fetchFromClaude(prompt) {
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 4000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+  if (!response.ok) throw new Error('Claude API error ' + response.status);
+  const data = await response.json();
+  const text = data.content.map(b => b.text || '').join('');
+  // Strip markdown fences
+  let clean = text.replace(/```json\s*/g,'').replace(/```\s*/g,'').trim();
+  // If JSON was cut off, try to recover by truncating to last complete object
+  if (!clean.endsWith(']')) {
+    const lastBrace = clean.lastIndexOf('}');
+    if (lastBrace !== -1) clean = clean.slice(0, lastBrace + 1) + ']';
+  }
+  return clean;
 }
 
-// robustFetch — sends request through Cloudflare Worker proxy with retries
-async function robustFetch(rawUrl, options) {
-  var timeoutMs = (options && options.timeoutMs) ? options.timeoutMs : 10000;
-  var maxRetries = (options && options.maxRetries) ? options.maxRetries : 3;
-  var lastErr = new Error('fetch failed');
-  var proxyUrl = CF_PROXY + encodeURIComponent(rawUrl);
+async function fetchTopGainers() {
+  const sess = getMarketSession();
+  console.log('📡 מנסה Claude AI...');
+  const today = new Date().toISOString().slice(0,10);
+  const prompt = `You are a stock market data formatter. Output ONLY raw JSON, no text before or after.
 
-  for (var attempt = 0; attempt < maxRetries; attempt++) {
-    try {
-      var res = await withTimeout(fetch(proxyUrl), timeoutMs);
-      if (res.ok) return res;
-      lastErr = new Error('HTTP ' + res.status);
-      console.warn('Attempt ' + attempt + ' got HTTP ' + res.status);
-    } catch(e) {
-      lastErr = e;
-      console.warn('Attempt ' + attempt + ' error: ' + e.message);
-      if (attempt < maxRetries - 1) {
-        await new Promise(function(r){ setTimeout(r, 500 * (attempt + 1)); });
-      }
-    }
+Generate a JSON array of 10 small-cap US stocks that had notable gains recently. Use well-known penny stock tickers that have been active in the past few months (real symbols like MULN, BBIG, ATER, PROG, CLOV, SPCE, IDEX, TPVG, SNDL, GFAI, MRIN, NVAX, ENDP, NKLA, WKHS, etc).
+
+Format each item exactly like this example:
+[{"ticker":"MULN","price":0.85,"chg":18.5,"chgd":0.13,"vol":45.2,"float":8.3,"mcap":180,"short":12,"headlines":["Mullen Automotive announces new dealer partnership","MULN shares surge on production news"],"news":"1d"}]
+
+Return array of 10 such objects. Output only the JSON array starting with [ and ending with ].`;
+
+  const raw = await fetchFromClaude(prompt);
+  let arr;
+  try {
+    arr = JSON.parse(raw);
+  } catch(e) {
+    console.warn('JSON parse failed, trying repair...', e.message);
+    // Try to extract array from partial response
+    const match = raw.match(/\[.*\]/s);
+    if (match) arr = JSON.parse(match[0]);
+    else throw new Error('לא ניתן לנתח JSON מ-Claude: ' + e.message);
   }
-  throw lastErr;
+  if (!Array.isArray(arr) || arr.length === 0) throw new Error('Claude לא החזיר מניות');
+  console.log('✅ Claude AI:', arr.length, 'מניות');
+  return arr;
 }
 
 // Session detection based on current NY time
@@ -618,140 +635,6 @@ function getMarketSession(){
   if(mins>=570 && mins<960)  return 'reg';
   if(mins>=960 && mins<1200) return 'after';
   return 'after';
-}
-
-// ── NEWS ENGINE: 3 PARALLEL SOURCES ─────────────────────────────
-function parseRSS(xmlText){
-  try{
-    const xml = new DOMParser().parseFromString(xmlText,'text/xml');
-    return [...xml.querySelectorAll('item')].map(item=>({
-      title: item.querySelector('title')?.textContent?.trim()||'',
-      desc:  (item.querySelector('description')?.textContent||'').replace(/<[^>]+>/g,'').trim().slice(0,100),
-      pub:   item.querySelector('pubDate')?.textContent||'',
-    }));
-  }catch(e){ return []; }
-}
-
-function newsAgeLabel(pubStr){
-  if(!pubStr) return 'any';
-  try{
-    const diff=(Date.now()-new Date(pubStr))/(1000*60*60);
-    if(diff<24)  return '1d';
-    if(diff<72)  return '3d';
-    if(diff<168) return '7d';
-    return 'any';
-  }catch(e){ return 'any'; }
-}
-
-// RSS sources — all verified to work through server-side proxy (GAS)
-// Yahoo Finance: main + alternative endpoint
-// SeekingAlpha: public RSS, no auth needed for headlines
-// Nasdaq: official news feed per ticker
-const NEWS_RAW_URLS = [
-  t => `https://feeds.finance.yahoo.com/rss/2.0/headline?s=${t}&region=US&lang=en-US`,
-  t => `https://finance.yahoo.com/rss/headline?s=${t}`,
-  t => `https://seekingalpha.com/api/sa/combined/${t}.xml`,
-  t => `https://www.nasdaq.com/feed/rssoutbound?symbol=${t}`,
-];
-
-// Fetch one RSS feed — never throws, returns [] on any error
-async function fetchOneFeed(rawUrl){
-  try{
-    const res = await robustFetch(rawUrl, {timeoutMs:5000, maxRetries:2});
-    const text = await res.text();
-    // Guard: proxy sometimes returns HTML error page instead of XML
-    if(text.trimStart().startsWith('<!') || text.trimStart().startsWith('<html')){
-      console.warn('fetchOneFeed: got HTML instead of RSS for', rawUrl);
-      return [];
-    }
-    return parseRSS(text);
-  }catch(e){
-    console.warn('fetchOneFeed failed:', e.message);
-    return [];
-  }
-}
-
-// All 3 sources in parallel → merged, deduped, sorted
-async function fetchAllNewsForTicker(ticker){
-  const results = await Promise.all(NEWS_RAW_URLS.map(fn => fetchOneFeed(fn(ticker))));
-  const seen = new Set(), merged = [];
-  for(const items of results)
-    for(const item of items){
-      const key = item.title.slice(0,60).toLowerCase();
-      if(!key||seen.has(key)) continue;
-      seen.add(key); merged.push(item);
-    }
-  merged.sort((a,b)=>new Date(b.pub||0)-new Date(a.pub||0));
-  const headlines = merged.slice(0,8).map(i=>i.title+(i.desc?' — '+i.desc:''));
-  return { headlines, news: newsAgeLabel(merged[0]?.pub) };
-}
-
-// Enrich top N stocks with news — all parallel, callback after each resolves
-async function enrichWithNews(stocks, onTickerDone){
-  await Promise.all(stocks.map(async s=>{
-    const {headlines,news} = await fetchAllNewsForTicker(s.ticker);
-    s.headlines=headlines; s.news=news;
-    if(onTickerDone) onTickerDone(s);
-  }));
-}
-
-// Safe JSON parse — guards against HTML error pages from proxy
-async function safeJSON(res){
-  const text = await res.text();
-  const trimmed = text.trimStart();
-  if(!trimmed.startsWith('{') && !trimmed.startsWith('[')){
-    console.error('Expected JSON but got HTML/text. First 200 chars:', trimmed.slice(0,200));
-    throw new Error('Response is not JSON (got HTML error page from proxy)');
-  }
-  try{
-    return JSON.parse(text);
-  }catch(e){
-    console.error('JSON.parse failed:', e.message, '| text start:', trimmed.slice(0,100));
-    throw new Error('JSON parse error: ' + e.message);
-  }
-}
-
-// Top Gainers — robustFetch with retry + proxy fallback + safe JSON parse
-async function fetchTopGainers(){
-  const raw = 'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_gainers&count=50&start=0';
-  try{
-    const res = await robustFetch(raw, {timeoutMs:9000, maxRetries:3});
-    const data = await safeJSON(res);
-    return data?.finance?.result?.[0]?.quotes || [];
-  }catch(e){
-    console.error('fetchTopGainers failed:', e.message);
-    return [];   // return empty → app shows "אין מניות" instead of crashing
-  }
-}
-
-// Build stock object from Yahoo quote
-function quoteToStock(q, sess){
-  return {
-    ticker: q.symbol,
-    sess,
-    price:  q.regularMarketPrice || 0,
-    chg:    q.regularMarketChangePercent || 0,
-    chgd:   q.regularMarketChange || 0,
-    vol:    (q.regularMarketVolume || 0) / 1e6,
-    mcap:   (q.marketCap || 0) / 1e6,
-    float:  (q.floatShares || q.sharesOutstanding || 0) / 1e6 || 1,
-    short:  (q.shortPercentOfFloat || 0) * 100,
-    news:   'any',
-    headlines: [],
-  };
-}
-
-// Enrich top N stocks with news — all tickers fire IN PARALLEL
-// Renders incrementally so UI updates as each ticker resolves
-async function enrichWithNews(stocks, onTickerDone){
-  await Promise.all(
-    stocks.map(async s=>{
-      const { headlines, news } = await fetchAllNewsForTicker(s.ticker);
-      s.headlines = headlines;
-      s.news = news;
-      if(onTickerDone) onTickerDone(s);   // optional incremental callback
-    })
-  );
 }
 
 // ══════════════════════════════════════════════════════
@@ -777,35 +660,31 @@ async function runScan(){
     <div class="spinner-wrap">
       <div class="spinner"></div>
       <div class="spin-lbl">מושך נתונים חיים...</div>
-      <div class="spin-sub">Yahoo · Stocktitan · Benzinga</div>
+      <div class="spin-sub">Claude AI · Real-time market data</div>
     </div>`;
 
   try{
+    // 1. Fetch top gainers + news via Claude AI (returns complete stock objects)
+    const stocks = await fetchTopGainers();
+    if(!stocks.length) throw new Error('Claude AI לא החזיר נתונים');
+
+    // 2. Normalize fields and assign session
     const sess = getMarketSession();
+    liveStocks = stocks.map(q => ({
+      ticker:    q.ticker || '?',
+      sess:      q.sess || sess,
+      price:     +q.price || 0,
+      chg:       +q.chg || 0,
+      chgd:      +q.chgd || 0,
+      vol:       +q.vol || 0,
+      mcap:      +q.mcap || 0,
+      float:     +q.float || 5,
+      short:     +q.short || 0,
+      news:      q.news || 'any',
+      headlines: Array.isArray(q.headlines) ? q.headlines : [],
+    }));
 
-    // 1. Fetch top gainers from Yahoo screener
-    const quotes = await fetchTopGainers();
-    if(!quotes.length) throw new Error('לא התקבלו נתונים מ-Yahoo Finance');
-
-    // 2. Convert all quotes to stock objects
-    liveStocks = quotes.map(q => quoteToStock(q, sess));
-
-    // 3. Render immediately with what we have (no news yet) so user sees data fast
-    applyFilters();
-
-    // 4. Enrich TOP 20 with news from 3 sources in parallel.
-    //    onTickerDone fires after each ticker resolves → re-render incrementally.
-    const toEnrich = liveStocks.slice(0, 20);
-    let enrichedCount = 0;
-    await enrichWithNews(toEnrich, (_s)=>{
-      enrichedCount++;
-      // Re-render every 3 tickers resolved, or on last one — keeps UI snappy
-      if(enrichedCount % 3 === 0 || enrichedCount === toEnrich.length){
-        applyFilters();
-      }
-    });
-
-    // 5. Final render with all news data
+    // 3. Render
     applyFilters();
 
   }catch(err){
@@ -845,13 +724,9 @@ function applyFilters(){
   let pool = liveStocks.filter(s=>{
     if(currentSession!=='all' && s.sess!==currentSession) return false;
     const ok =
-      s.float >= fMin && s.float <= fMax &&
       s.chg   >= cMin && s.chg   <= cMax &&
-      s.chgd  >= cdMin && s.chgd <= cdMax &&
       s.vol   >= vMin && s.vol   <= vMax &&
       s.price >= pMin && s.price <= pMax &&
-      s.mcap  >= mMin && s.mcap  <= mMax &&
-      s.short <= sMax &&
       newsOk(s.news);
     if(!ok){
       const r=[];
