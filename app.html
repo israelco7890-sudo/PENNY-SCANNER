@@ -172,8 +172,6 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
 .res-count{font-size:11px;color:var(--dim);}
 .res-count strong{color:var(--accent);font-size:14px;}
 .sort-sel{background:var(--s2);border:1px solid var(--b2);color:var(--text);font-family:var(--mono);font-size:10px;padding:5px 8px;border-radius:6px;outline:none;}
-
-
 /* error banner */
 .err-bar{display:none;padding:6px 14px;background:var(--rdim);border-bottom:1px solid var(--red);font-size:10px;color:var(--red);flex-shrink:0;align-items:center;gap:8px;}
 .err-bar.show{display:flex;}
@@ -189,7 +187,6 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
   </div>
 </div>
 
-
 <div class="sess-tabs">
   <button class="stab all active" onclick="setSession('all')">🌐 ALL</button>
   <button class="stab pre" onclick="setSession('pre')">🌅 PRE</button>
@@ -199,7 +196,7 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
 
 <div class="ar-bar" id="ar-bar">
   <span>⟳ Auto Refresh פעיל</span>
-  <span class="ar-ctr" id="ar-ctr">5:00</span>
+  <span class="ar-ctr" id="ar-ctr">15s</span>
 </div>
 
 <div class="err-bar" id="err-bar">⚠️ <span id="err-msg"></span></div>
@@ -517,15 +514,15 @@ function toggleAR(){
   if(on)startAR();else{if(arTimer)clearInterval(arTimer);arTimer=null;}
 }
 function startAR(){arCd=300;updAR();if(arTimer)clearInterval(arTimer);arTimer=setInterval(()=>{arCd--;updAR();if(arCd<=0){arCd=300;runScan();}},1000);}
-function updAR(){const m=Math.floor(arCd/60),s=arCd%60;document.getElementById('ar-ctr').textContent=m+':'+String(s).padStart(2,'0');}
+function updAR(){var m=Math.floor(arCd/60),s=arCd%60;document.getElementById('ar-ctr').textContent=m+':'+(s<10?'0':'')+s;}
 
 // ══════════════════════════════════════════════════════
 //  NOTIFICATIONS
 // ══════════════════════════════════════════════════════
 let alertedSet=new Set();
 async function reqNotif(){
-  if(typeof Notification==='undefined'||!('Notification'in window)){alert('התראות לא נתמכות בדפדפן זה');return;}
-  if(Notification.permission==='granted'){alertedSet.clear();setNotifIcon(false);return;}
+  if(typeof Notification==='undefined'||!('Notification'in window)){alert('התראות לא נתמכות');return;}
+  if(typeof Notification!=='undefined'&&Notification.permission==='granted'){alertedSet.clear();setNotifIcon(false);return;}
   const p=await Notification.requestPermission();
   setNotifIcon(p==='granted');
   if(p==='granted')setTimeout(()=>pushN('⚡ PennyScanner','התראות מופעלות!',''),500);
@@ -568,6 +565,10 @@ function checkAlerts(results){
 }
 
 // ══════════════════════════════════════════════════════
+//  LIVE DATA ENGINE
+// ══════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════
 //  DATA ENGINE — Yahoo Finance via Cloudflare Worker
 // ══════════════════════════════════════════════════════
 
@@ -578,23 +579,23 @@ async function proxyFetch(rawUrl, timeoutMs) {
   const proxyUrl = CF_PROXY + encodeURIComponent(rawUrl);
   const res = await Promise.race([
     fetch(proxyUrl),
-    new Promise((_,rej) => setTimeout(() => rej(new Error('timeout')), timeoutMs))
+    new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, timeoutMs); })
   ]);
   if (!res.ok) throw new Error('HTTP ' + res.status);
   return res;
 }
 
 function yahooQuoteToStock(q, sess) {
-  const price  = q.regularMarketPrice || 0;
-  const chgPct = q.regularMarketChangePercent || 0;
-  const volM   = (q.regularMarketVolume || 0) / 1e6;
-  const mcapM  = (q.marketCap || 0) / 1e6;
-  const floatM = q.floatShares ? q.floatShares / 1e6
-               : q.sharesOutstanding ? q.sharesOutstanding / 1e6 : 5;
-  const shortPct = (q.shortPercentOfFloat || 0) < 1
+  var price  = q.regularMarketPrice || 0;
+  var chgPct = q.regularMarketChangePercent || 0;
+  var volM   = (q.regularMarketVolume || 0) / 1e6;
+  var mcapM  = (q.marketCap || 0) / 1e6;
+  var floatM = q.floatShares ? q.floatShares / 1e6
+             : q.sharesOutstanding ? q.sharesOutstanding / 1e6 : 5;
+  var shortPct = (q.shortPercentOfFloat || 0) < 1
     ? (q.shortPercentOfFloat || 0) * 100 : (q.shortPercentOfFloat || 0);
   return {
-    ticker: q.symbol, sess, price,
+    ticker: q.symbol, sess: sess, price: price,
     chg: chgPct, chgd: q.regularMarketChange || 0,
     vol: volM, mcap: mcapM, float: floatM, short: shortPct,
     news: 'any', headlines: [],
@@ -602,66 +603,59 @@ function yahooQuoteToStock(q, sess) {
 }
 
 async function fetchTopGainers() {
-  const sess = getMarketSession();
-  const yahooUrls = [
+  var sess = getMarketSession();
+  var yahooUrls = [
     'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_gainers&count=25',
     'https://query2.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=small_cap_gainers&count=25',
   ];
 
-  for (let i = 0; i < yahooUrls.length; i++) {
+  for (var i = 0; i < yahooUrls.length; i++) {
     try {
-      console.log('📡 Yahoo endpoint', i, '...');
-      const res = await proxyFetch(yahooUrls[i]);
-      const data = JSON.parse(await res.text());
-      const quotes = data?.finance?.result?.[0]?.quotes || [];
+      console.log('Yahoo endpoint', i, '...');
+      var res = await proxyFetch(yahooUrls[i]);
+      var data = JSON.parse(await res.text());
+      var quotes = (data && data.finance && data.finance.result && data.finance.result[0] && data.finance.result[0].quotes) || [];
       if (quotes.length > 0) {
-        console.log('✅ Yahoo:', quotes.length, 'מניות');
-        return quotes.map(q => yahooQuoteToStock(q, sess));
+        console.log('Yahoo:', quotes.length, 'stocks');
+        return quotes.map(function(q){ return yahooQuoteToStock(q, sess); });
       }
-    } catch(e) { console.warn('Yahoo', i, 'נכשל:', e.message); }
+    } catch(e) { console.warn('Yahoo', i, 'failed:', e.message); }
   }
 
   // Fallback: Finviz CSV
   try {
-    console.log('📡 Finviz...');
-    const res = await proxyFetch('https://finviz.com/export.ashx?v=111&f=cap_smallover,geo_usa,sh_price_u20,ta_change_u5&ft=4&o=-change&c=1,2,3,4,5,6,7,65,66,67');
-    const text = await res.text();
-    if (text.includes('Ticker')) {
-      const lines = text.trim().split('
-');
-      const headers = lines[0].split(',').map(h => h.replace(/"/g,'').trim());
-      return lines.slice(1).map(line => {
-        const cols = line.split(',').map(c => c.replace(/"/g,'').trim());
-        const r = {};
-        headers.forEach((h,i) => r[h] = cols[i]||'');
-        const price = parseFloat(r['Price'])||0;
-        const chgPct = parseFloat((r['Change']||'0').replace('%',''))||0;
-        const vs = r['Volume']||'0';
-        const volM = vs.includes('M') ? parseFloat(vs) : vs.includes('K') ? parseFloat(vs)/1000 : parseInt(vs)/1e6;
-        let floatM = parseFloat(r['Float']||'5');
-        if ((r['Float']||'').includes('B')) floatM *= 1000;
-        let mcapM = parseFloat(r['Market Cap']||'0')||0;
-        if ((r['Market Cap']||'').includes('B')) mcapM *= 1000;
-        return { ticker:r['Ticker']||'?', sess, price, chg:chgPct, chgd:price*chgPct/100, vol:volM, mcap:mcapM, float:floatM||5, short:parseFloat((r['Short Float']||'0').replace('%',''))||0, news:'any', headlines:[] };
+    console.log('Finviz...');
+    var fres = await proxyFetch('https://finviz.com/export.ashx?v=111&f=cap_smallover,geo_usa,sh_price_u20,ta_change_u5&ft=4&o=-change&c=1,2,3,4,5,6,7,65,66,67');
+    var ftext = await fres.text();
+    if (ftext.indexOf('Ticker') !== -1) {
+      var flines = ftext.trim().split('\n');
+      var headers = flines[0].split(',').map(function(h){ return h.replace(/"/g,'').trim(); });
+      return flines.slice(1).filter(function(l){ return l.trim(); }).map(function(line){
+        var cols = line.split(',').map(function(c){ return c.replace(/"/g,'').trim(); });
+        var r = {};
+        headers.forEach(function(h,i){ r[h] = cols[i]||''; });
+        var price = parseFloat(r['Price'])||0;
+        var chgPct = parseFloat((r['Change']||'0').replace('%',''))||0;
+        var vs = r['Volume']||'0';
+        var volM = vs.indexOf('M')>-1 ? parseFloat(vs) : vs.indexOf('K')>-1 ? parseFloat(vs)/1000 : parseInt(vs)/1e6;
+        var floatM = parseFloat(r['Float']||'5');
+        if ((r['Float']||'').indexOf('B')>-1) floatM *= 1000;
+        var mcapM = parseFloat(r['Market Cap']||'0')||0;
+        if ((r['Market Cap']||'').indexOf('B')>-1) mcapM *= 1000;
+        return {
+          ticker: r['Ticker']||'?', sess: sess, price: price,
+          chg: chgPct, chgd: price*chgPct/100,
+          vol: volM, mcap: mcapM, float: floatM||5,
+          short: parseFloat((r['Short Float']||'0').replace('%',''))||0,
+          news: 'any', headlines: []
+        };
       });
     }
-  } catch(e) { console.warn('Finviz נכשל:', e.message); }
+  } catch(e) { console.warn('Finviz failed:', e.message); }
 
   throw new Error('כל המקורות נכשלו');
 }
 
-// Session detection based on current NY time
-function getMarketSession(){
-  const now = new Date();
-  const ny = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
-  const h = ny.getHours(), m = ny.getMinutes();
-  const mins = h*60+m, day = ny.getDay();
-  if(day===0||day===6) return 'after';
-  if(mins>=240 && mins<570)  return 'pre';
-  if(mins>=570 && mins<960)  return 'reg';
-  if(mins>=960 && mins<1200) return 'after';
-  return 'after';
-}
 
 // ══════════════════════════════════════════════════════
 //  STATE
@@ -686,31 +680,18 @@ async function runScan(){
     <div class="spinner-wrap">
       <div class="spinner"></div>
       <div class="spin-lbl">מושך נתונים חיים...</div>
-      <div class="spin-sub">Claude AI · Real-time market data</div>
+      <div class="spin-sub">Yahoo · Stocktitan · Benzinga</div>
     </div>`;
 
   try{
-    // 1. Fetch top gainers + news via Claude AI (returns complete stock objects)
-    const stocks = await fetchTopGainers();
-    if(!stocks.length) throw new Error('Claude AI לא החזיר נתונים');
-
-    // 2. Normalize fields and assign session
     const sess = getMarketSession();
-    liveStocks = stocks.map(q => ({
-      ticker:    q.ticker || '?',
-      sess:      q.sess || sess,
-      price:     +q.price || 0,
-      chg:       +q.chg || 0,
-      chgd:      +q.chgd || 0,
-      vol:       +q.vol || 0,
-      mcap:      +q.mcap || 0,
-      float:     +q.float || 5,
-      short:     +q.short || 0,
-      news:      q.news || 'any',
-      headlines: Array.isArray(q.headlines) ? q.headlines : [],
-    }));
 
-    // 3. Render
+    // 1. Fetch top gainers via CF Worker
+    var stocks = await fetchTopGainers();
+    if(!stocks.length) throw new Error('לא התקבלו נתונים');
+
+    // 2. Store and render
+    liveStocks = stocks;
     applyFilters();
 
   }catch(err){
