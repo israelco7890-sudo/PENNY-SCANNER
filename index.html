@@ -568,6 +568,19 @@ function checkAlerts(results){
 //  LIVE DATA ENGINE
 // ══════════════════════════════════════════════════════
 
+// Session detection based on current NY time
+function getMarketSession(){
+  var now = new Date();
+  var ny = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  var h = ny.getHours(), m = ny.getMinutes();
+  var mins = h*60+m, day = ny.getDay();
+  if(day===0||day===6) return 'after';
+  if(mins>=240 && mins<570)  return 'pre';
+  if(mins>=570 && mins<960)  return 'reg';
+  if(mins>=960 && mins<1200) return 'after';
+  return 'after';
+}
+
 // ══════════════════════════════════════════════════════
 //  DATA ENGINE — Yahoo Finance via Cloudflare Worker
 // ══════════════════════════════════════════════════════
