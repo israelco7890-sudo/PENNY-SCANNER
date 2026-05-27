@@ -175,6 +175,40 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
 /* error banner */
 .err-bar{display:none;padding:6px 14px;background:var(--rdim);border-bottom:1px solid var(--red);font-size:10px;color:var(--red);flex-shrink:0;align-items:center;gap:8px;}
 .err-bar.show{display:flex;}
+
+.filter-row input[type="range"] {
+  width: 100%;
+  height: 6px;
+  background: linear-gradient(to right, var(--accent) 0%, var(--accent) 100%);
+  outline: none;
+  border-radius: 3px;
+  margin: 8px 0;
+  -webkit-appearance: none;
+}
+.filter-row input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  cursor: pointer;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(96,165,250,0.5);
+}
+.filter-row input[type="range"]::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  cursor: pointer;
+  border-radius: 50%;
+  border: none;
+  box-shadow: 0 0 8px rgba(96,165,250,0.5);
+}
+.filter-row label span {
+  color: var(--accent);
+  font-weight: 600;
+}
+
 </style>
 </head>
 <body>
@@ -255,37 +289,32 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
     <div>
       <div class="sec-title">% שינוי</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN %</label><input type="number" class="ni" id="cmin" value="5" onchange="saveFilters()"></div>
-        <div class="ri"><label>MAX %</label><input type="number" class="ni" id="cmax" value="5000" onchange="saveFilters()"></div>
-      </div>
+        <div class="fl"><span>עד</span><span class="fv" id="cmin-v">5%</span></div>
+        <input type="range" id="cmin" min="0" max="5000" step="1" value="5" oninput="document.getElementById('cmin-v').textContent = this.value + '%'; saveFilters()">
     </div>
     <div>
       <div class="sec-title">שינוי ($)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="cdmin" value="0.3" step="0.1" onchange="saveFilters()"></div>
-        <div class="ri"><label>MAX $</label><input type="number" class="ni" id="cdmax" value="50" onchange="saveFilters()"></div>
-      </div>
+        <div class="fl"><span>עד</span><span class="fv" id="cdmin-v">$0.3</span></div>
+        <input type="range" id="cdmin" min="0" max="100" step="0.1" value="0.3" oninput="document.getElementById('cdmin-v').textContent = '$' + parseFloat(this.value).toFixed(2); saveFilters()">
     </div>
     <div>
       <div class="sec-title">Volume (M)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN</label><input type="number" class="ni" id="vmin" value="0.1" step="0.1" onchange="saveFilters()"></div>
-        <div class="ri"><label>MAX</label><input type="number" class="ni" id="vmax" value="999" step="10" onchange="saveFilters()"></div>
-      </div>
+        <div class="fl"><span>עד</span><span class="fv" id="vmin-v">0.1M</span></div>
+        <input type="range" id="vmin" min="0" max="1000" step="0.1" value="0.1" oninput="document.getElementById('vmin-v').textContent = parseFloat(this.value).toFixed(1) + 'M'; saveFilters()">
     </div>
     <div>
       <div class="sec-title">מחיר ($)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="pmin" value="0.1" step="0.1" onchange="saveFilters()"></div>
-        <div class="ri"><label>MAX $</label><input type="number" class="ni" id="pmax" value="50" onchange="saveFilters()"></div>
-      </div>
+        <div class="fl"><span>עד</span><span class="fv" id="pmin-v">$0.1</span></div>
+        <input type="range" id="pmin" min="0" max="100" step="0.1" value="0.1" oninput="document.getElementById('pmin-v').textContent = '$' + parseFloat(this.value).toFixed(2); saveFilters()">
     </div>
     <div>
       <div class="sec-title">Market Cap (M)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN</label><input type="number" class="ni" id="mmin" value="1" onchange="saveFilters()"></div>
-        <div class="ri"><label>MAX</label><input type="number" class="ni" id="mmax" value="999" onchange="saveFilters()"></div>
-      </div>
+        <div class="fl"><span>עד</span><span class="fv" id="mmin-v">1M</span></div>
+        <input type="range" id="mmin" min="0" max="10000" step="10" value="1" oninput="document.getElementById('mmin-v').textContent = this.value + 'M'; saveFilters()">
     </div>
     <div>
       <div class="sec-title">Short Interest Max</div>
@@ -545,7 +574,11 @@ function showToast(s){
 }
 function rmToast(el){el.classList.add('removing');setTimeout(()=>el.remove(),300);}
 function checkAlerts(results){
-  if(typeof Notification==='undefined'||Notification.permission!=='granted')return;
+  console.log('checkAlerts called, Notification available:', typeof Notification !== 'undefined', 'permission:', typeof Notification !== 'undefined' ? Notification.permission : 'N/A');
+  if(typeof Notification==='undefined'||Notification.permission!=='granted'){
+    console.warn('Notifications disabled - type:', typeof Notification, 'permission:', typeof Notification !== 'undefined' ? Notification.permission : 'undefined');
+    return;
+  }
   const kwOnly=document.getElementById('al-kw').checked;
   const newsOnly=document.getElementById('al-news').checked;
   const minChg=+document.getElementById('al-chg').value||0;
@@ -589,7 +622,9 @@ const CF_PROXY = 'https://quiet-snowflake-f1fb.israelco7890.workers.dev/?url=';
 
 async function proxyFetch(rawUrl, timeoutMs) {
   timeoutMs = timeoutMs || 12000;
+  console.log('🔗 Fetching via CF proxy:', rawUrl.slice(0,80));
   const proxyUrl = CF_PROXY + encodeURIComponent(rawUrl);
+  console.log('Proxy URL:', proxyUrl.slice(0,100));
   const res = await Promise.race([
     fetch(proxyUrl),
     new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, timeoutMs); })
@@ -618,11 +653,48 @@ function yahooQuoteToStock(q, sess) {
 async function fetchTopGainers() {
   var sess = getMarketSession();
   var yahooUrls = [
-    'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_gainers&count=25',
-    'https://query2.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=small_cap_gainers&count=25',
+    'https://query1.finance.yahoo.com/v1/finance/screener?formatted=false&lang=en-US&region=US&count=25',
+    'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=small_cap_gainers&count=25',
+    'https://query2.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_gainers&count=25',
   ];
+  // Custom screener body for penny stocks (price < 20, change > 5%)
+  var screenerBody = JSON.stringify({
+    offset: 0, size: 50, sortField: 'percentchange', sortType: 'DESC',
+    quoteType: 'EQUITY', topOperator: 'AND',
+    query: { operator: 'AND', operands: [
+      { operator: 'lt', operands: ['regularmarketprice', 20] },
+      { operator: 'gt', operands: ['regularmarketprice', 0.01] },
+      { operator: 'gt', operands: ['regularmarketchangepercent', 0] },
+      { operator: 'gt', operands: ['regularmarketvolume', 100000] },
+      { operator: 'eq', operands: ['region', 'us'] }
+    ]}
+  });
 
-  for (var i = 0; i < yahooUrls.length; i++) {
+  // Try custom penny stock screener first (POST)
+  try {
+    console.log('Yahoo custom screener...');
+    var screenerUrl = 'https://query1.finance.yahoo.com/v1/finance/screener?formatted=false&lang=en-US&region=US';
+    var proxyUrl = CF_PROXY + encodeURIComponent(screenerUrl);
+    var sres = await Promise.race([
+      fetch(proxyUrl, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: screenerBody
+      }),
+      new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, 12000); })
+    ]);
+    if (sres.ok) {
+      var sdata = JSON.parse(await sres.text());
+      var squotes = (sdata && sdata.finance && sdata.finance.result && sdata.finance.result[0] && sdata.finance.result[0].quotes) || [];
+      if (squotes.length > 0) {
+        console.log('Yahoo screener:', squotes.length, 'penny stocks');
+        return squotes.map(function(q){ return yahooQuoteToStock(q, sess); });
+      }
+    }
+  } catch(e) { console.warn('Yahoo screener failed:', e.message); }
+
+  // Fallback: predefined screeners
+  for (var i = 1; i < yahooUrls.length; i++) {
     try {
       console.log('Yahoo endpoint', i, '...');
       var res = await proxyFetch(yahooUrls[i]);
