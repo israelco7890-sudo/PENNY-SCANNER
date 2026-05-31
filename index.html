@@ -245,53 +245,46 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
       <div class="sec-title">Float (M)</div>
       <div class="filter-row" style="margin-top:8px">
         <div class="fl"><span>Min Float</span><span class="fv" id="fmin-v">0.1M</span></div>
-        <input type="range" id="fmin" min="0.1" max="30" step="0.1" value="0.1" oninput="saveFilters()">
+        <input type="range" id="fmin" min="0.1" max="30" step="0.1" value="0.1" oninput="applyFilters()">
       </div>
       <div class="filter-row" style="margin-top:10px">
-        <div class="fl"><span>Max Float</span><span class="fv" id="fmax-v">20M</span></div>
-        <input type="range" id="fmax" min="1" max="60" step="0.5" value="60" oninput="saveFilters()">
+        <input type="range" id="fmin" min="1" max="60" step="0.5" value="60" oninput="applyFilters()">
       </div>
     </div>
     <div>
       <div class="sec-title">% שינוי</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN %</label><input type="number" class="ni" id="cmin" value="5" onchange="saveFilters()"></div>
-        <div class="ri"><label>MAX %</label><input type="number" class="ni" id="cmax" value="5000" onchange="saveFilters()"></div>
+        <div class="ri"><label>MIN %</label><input type="number" class="ni" id="cmin" value="5" onchange="applyFilters()"></div>
       </div>
     </div>
     <div>
       <div class="sec-title">שינוי ($)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="cdmin" value="0.3" step="0.1" onchange="saveFilters()"></div>
-        <div class="ri"><label>MAX $</label><input type="number" class="ni" id="cdmax" value="50" onchange="saveFilters()"></div>
+        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="cdmin" value="0.3" step="0.1" onchange="applyFilters()"></div>
       </div>
     </div>
     <div>
       <div class="sec-title">Volume (M)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN</label><input type="number" class="ni" id="vmin" value="0.1" step="0.1" onchange="saveFilters()"></div>
-        <div class="ri"><label>MAX</label><input type="number" class="ni" id="vmax" value="999" step="10" onchange="saveFilters()"></div>
+        <div class="ri"><label>MIN</label><input type="number" class="ni" id="vmin" value="0.1" step="0.1" onchange="applyFilters()"></div>
       </div>
     </div>
     <div>
       <div class="sec-title">מחיר ($)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="pmin" value="0.1" step="0.1" onchange="saveFilters()"></div>
-        <div class="ri"><label>MAX $</label><input type="number" class="ni" id="pmax" value="50" onchange="saveFilters()"></div>
+        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="pmin" value="0.1" step="0.1" onchange="applyFilters()"></div>
       </div>
     </div>
     <div>
       <div class="sec-title">Market Cap (M)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN</label><input type="number" class="ni" id="mmin" value="1" onchange="saveFilters()"></div>
-        <div class="ri"><label>MAX</label><input type="number" class="ni" id="mmax" value="999" onchange="saveFilters()"></div>
+        <div class="ri"><label>MIN</label><input type="number" class="ni" id="mmin" value="1" onchange="applyFilters()"></div>
       </div>
     </div>
     <div>
       <div class="sec-title">Short Interest Max</div>
       <div class="filter-row" style="margin-top:8px">
-        <div class="fl"><span>Max Short %</span><span class="fv" id="smax-v">50%</span></div>
-        <input type="range" id="smax" min="0" max="100" step="1" value="50" oninput="saveFilters()">
+        <input type="range" id="smax" min="0" max="100" step="1" value="50" oninput="applyFilters()">
       </div>
     </div>
     <div>
@@ -452,8 +445,14 @@ function setSession(s){
 // ══════════════════════════════════════════════════════
 //  FILTERS — SAVE/LOAD
 // ══════════════════════════════════════════════════════
+function saveIBToken(){
+  var token = document.getElementById('ib-token-input').value.trim();
+  if(!token){alert('הכנס Token'); return;}
+  localStorage.setItem('ib_token', token);
+  alert('Token שמור!');
+}
+
 function saveFilters(){
-  const f={fmin:document.getElementById('fmin').value,fmax:document.getElementById('fmax').value,cmin:document.getElementById('cmin').value,cmax:document.getElementById('cmax').value,cdmin:document.getElementById('cdmin').value,cdmax:document.getElementById('cdmax').value,vmin:document.getElementById('vmin').value,vmax:document.getElementById('vmax').value,pmin:document.getElementById('pmin').value,pmax:document.getElementById('pmax').value,mmin:document.getElementById('mmin').value,mmax:document.getElementById('mmax').value,smax:document.getElementById('smax').value,news:newsFilter,ar:document.getElementById('ar-toggle').checked};
   localStorage.setItem('ps_filters',JSON.stringify(f));
   updateSliderLabels();applyFilters();
 }
@@ -462,7 +461,6 @@ function loadFilters(){
   if(!stored){updateSliderLabels();return;}
   try{
     const f=JSON.parse(stored);
-    ['fmin','fmax','cmin','cmax','cdmin','cdmax','vmin','vmax','pmin','pmax','mmin','mmax','smax'].forEach(id=>{if(f[id]!==undefined)document.getElementById(id).value=f[id];});
     newsFilter=f.news||'any';
     document.getElementById('ar-toggle').checked=f.ar||false;
     document.querySelectorAll('[data-news]').forEach(x=>x.classList.remove('active'));
@@ -473,7 +471,6 @@ function loadFilters(){
 }
 function updateSliderLabels(){
   document.getElementById('fmin-v').textContent=parseFloat(document.getElementById('fmin').value).toFixed(1)+'M';
-  document.getElementById('fmax-v').textContent=parseFloat(document.getElementById('fmax').value).toFixed(1)+'M';
   document.getElementById('smax-v').textContent=document.getElementById('smax').value+'%';
 }
 document.getElementById('fmin').addEventListener('input',updateSliderLabels);
@@ -569,20 +566,82 @@ function checkAlerts(results){
 // ══════════════════════════════════════════════════════
 
 // ══════════════════════════════════════════════════════
-//  DATA ENGINE — Yahoo Finance via Cloudflare Worker
+//  DATA ENGINE — Interactive Brokers Flex Query API
 // ══════════════════════════════════════════════════════
 
-const CF_PROXY = 'https://quiet-snowflake-f1fb.israelco7890.workers.dev/?url=';
+const IB_ACCOUNT = 'U10460162';
+const IB_QUERY_ID = '1527253';
+const IB_TOKEN = localStorage.getItem('ib_token') || '';
 
-async function proxyFetch(rawUrl, timeoutMs) {
-  timeoutMs = timeoutMs || 12000;
-  const proxyUrl = CF_PROXY + encodeURIComponent(rawUrl);
-  const res = await Promise.race([
-    fetch(proxyUrl),
-    new Promise(function(_,rej){ setTimeout(function(){ rej(new Error('timeout')); }, timeoutMs); })
-  ]);
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res;
+function setIBToken(token) {
+  localStorage.setItem('ib_token', token);
+}
+
+function getIBToken() {
+  return localStorage.getItem('ib_token') || '';
+}
+
+async function fetchIBFlexQuery() {
+  var token = getIBToken();
+  if (!token) {
+    throw new Error('IB Token required - לחץ על הגדרות והכנס IB API Token');
+  }
+  
+  try {
+    console.log('Fetching IB Flex Query:', IB_QUERY_ID);
+    var url = 'https://api.ibkr.com/ibcustom/v1/flexqueries/' + IB_QUERY_ID + '/download';
+    var response = await fetch(url, {
+      headers: {
+        'Authorization': 'Bearer ' + token
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('HTTP ' + response.status + ' - בדוק את ה-IB Token');
+    }
+    
+    var xml = await response.text();
+    console.log('IB Response length:', xml.length);
+    return parseIBXML(xml);
+  } catch(e) {
+    console.error('IB Flex Query failed:', e.message);
+    // Fallback to Yahoo
+    console.log('Falling back to Yahoo Finance...');
+    return await fetchTopGainersYahoo();
+  }
+}
+
+function parseIBXML(xml) {
+  var stocks = [];
+  var sess = getMarketSession();
+  
+  // Parse XML - look for Trade elements
+  var tradeMatches = xml.match(/<Trade[^>]*>/g) || [];
+  console.log('Found', tradeMatches.length, 'trades in IB data');
+  
+  // For now, return empty - we'll parse in next step
+  return stocks;
+}
+
+async function fetchTopGainersYahoo() {
+  var sess = getMarketSession();
+  var yahooUrls = [
+    'https://query1.finance.yahoo.com/v1/finance/screener/predefined/saved?formatted=false&lang=en-US&region=US&scrIds=day_gainers&count=50',
+  ];
+
+  for (var i = 0; i < yahooUrls.length; i++) {
+    try {
+      console.log('Yahoo endpoint', i, '...');
+      var res = await fetch(yahooUrls[i]);
+      var data = JSON.parse(await res.text());
+      var quotes = (data && data.finance && data.finance.result && data.finance.result[0] && data.finance.result[0].quotes) || [];
+      if (quotes.length > 0) {
+        console.log('Yahoo:', quotes.length, 'stocks');
+        return quotes.map(function(q){ return yahooQuoteToStock(q, sess); });
+      }
+    } catch(e) { console.warn('Yahoo failed:', e.message); }
+  }
+  return [];
 }
 
 function yahooQuoteToStock(q, sess) {
@@ -590,8 +649,7 @@ function yahooQuoteToStock(q, sess) {
   var chgPct = q.regularMarketChangePercent || 0;
   var volM   = (q.regularMarketVolume || 0) / 1e6;
   var mcapM  = (q.marketCap || 0) / 1e6;
-  var floatM = q.floatShares ? q.floatShares / 1e6
-             : q.sharesOutstanding ? q.sharesOutstanding / 1e6 : 5;
+  var floatM = q.floatShares ? q.floatShares / 1e6 : 0;
   var shortPct = (q.shortPercentOfFloat || 0) < 1
     ? (q.shortPercentOfFloat || 0) * 100 : (q.shortPercentOfFloat || 0);
   return {
@@ -601,6 +659,29 @@ function yahooQuoteToStock(q, sess) {
     news: 'any', headlines: [],
   };
 }
+
+function getMarketSession(){
+  var now = new Date();
+  var ny = new Date(now.toLocaleString('en-US',{timeZone:'America/New_York'}));
+  var h = ny.getHours(), m = ny.getMinutes();
+  var mins = h*60+m, day = ny.getDay();
+  if(day===0||day===6) return 'after';
+  if(mins>=240 && mins<570)  return 'pre';
+  if(mins>=570 && mins<960)  return 'reg';
+  if(mins>=960 && mins<1200) return 'after';
+  return 'after';
+}
+
+async function fetchTopGainers() {
+  // Try IB first, fallback to Yahoo
+  try {
+    return await fetchIBFlexQuery();
+  } catch(e) {
+    console.warn('IB failed, using Yahoo:', e.message);
+    return await fetchTopGainersYahoo();
+  }
+}
+
 
 function getMarketSession(){
   var now = new Date();
@@ -693,12 +774,6 @@ async function runScan(){
 //  FILTER & DISPLAY
 // ══════════════════════════════════════════════════════
 function applyFilters(){
-  const fMin=+document.getElementById('fmin').value, fMax=+document.getElementById('fmax').value;
-  const cMin=+document.getElementById('cmin').value,  cMax=+document.getElementById('cmax').value;
-  const cdMin=+document.getElementById('cdmin').value,cdMax=+document.getElementById('cdmax').value;
-  const vMin=+document.getElementById('vmin').value,  vMax=+document.getElementById('vmax').value;
-  const pMin=+document.getElementById('pmin').value,  pMax=+document.getElementById('pmax').value;
-  const mMin=+document.getElementById('mmin').value,  mMax=+document.getElementById('mmax').value;
   const sMax=+document.getElementById('smax').value;
   const newsMap={'1d':1,'3d':3,'7d':7,'any':999};
   const newsLim=newsMap[newsFilter]||999;
