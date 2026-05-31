@@ -254,31 +254,36 @@ input:checked+.sw-track:before{transform:translateX(20px);background:var(--green
     <div>
       <div class="sec-title">% שינוי</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN %</label><input type="number" class="ni" id="cmin" value="5" onchange="applyFilters()"></div>
+        <div class="ri"><label>Change % עד: <span id="cmin-v">5</span>%</label>
+        <input type="range" id="cmin" min="0" max="5000" step="1" value="5" oninput="document.getElementById('cmin-v').textContent = this.value; applyFilters()" style="width:100%></div>
       </div>
     </div>
     <div>
       <div class="sec-title">שינוי ($)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="cdmin" value="0.3" step="0.1" onchange="applyFilters()"></div>
+        <div class="ri"><label>Change ($) עד: $<span id="cdmin-v">0.3</span></label>
+        <input type="range" id="cdmin" min="0" max="100" step="0.1" value="0.3" oninput="document.getElementById('cdmin-v').textContent = parseFloat(this.value).toFixed(2); applyFilters()" style="width:100%></div>
       </div>
     </div>
     <div>
       <div class="sec-title">Volume (M)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN</label><input type="number" class="ni" id="vmin" value="0.1" step="0.1" onchange="applyFilters()"></div>
+        <div class="ri"><label>Volume (M) עד: <span id="vmin-v">0.1</span></label>
+        <input type="range" id="vmin" min="0" max="1000" step="0.1" value="0.1" oninput="document.getElementById('vmin-v').textContent = parseFloat(this.value).toFixed(1); applyFilters()" style="width:100%></div>
       </div>
     </div>
     <div>
       <div class="sec-title">מחיר ($)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN $</label><input type="number" class="ni" id="pmin" value="0.1" step="0.1" onchange="applyFilters()"></div>
+        <div class="ri"><label>Price ($) עד: $<span id="pmin-v">0.1</span></label>
+        <input type="range" id="pmin" min="0" max="100" step="0.1" value="0.1" oninput="document.getElementById('pmin-v').textContent = parseFloat(this.value).toFixed(2); applyFilters()" style="width:100%></div>
       </div>
     </div>
     <div>
       <div class="sec-title">Market Cap (M)</div>
       <div class="rg" style="margin-top:8px">
-        <div class="ri"><label>MIN</label><input type="number" class="ni" id="mmin" value="1" onchange="applyFilters()"></div>
+        <div class="ri"><label>Market Cap (M) עד: <span id="mmin-v">1</span></label>
+        <input type="range" id="mmin" min="0" max="10000" step="10" value="1" oninput="document.getElementById('mmin-v').textContent = this.value; applyFilters()" style="width:100%></div>
       </div>
     </div>
     <div>
@@ -445,13 +450,6 @@ function setSession(s){
 // ══════════════════════════════════════════════════════
 //  FILTERS — SAVE/LOAD
 // ══════════════════════════════════════════════════════
-function saveIBToken(){
-  var token = document.getElementById('ib-token-input').value.trim();
-  if(!token){alert('הכנס Token'); return;}
-  localStorage.setItem('ib_token', token);
-  alert('Token שמור!');
-}
-
 function saveFilters(){
   localStorage.setItem('ps_filters',JSON.stringify(f));
   updateSliderLabels();applyFilters();
@@ -673,13 +671,7 @@ function getMarketSession(){
 }
 
 async function fetchTopGainers() {
-  // Try IB first, fallback to Yahoo
-  try {
-    return await fetchIBFlexQuery();
-  } catch(e) {
-    console.warn('IB failed, using Yahoo:', e.message);
-    return await fetchTopGainersYahoo();
-  }
+  return await fetchTopGainersYahoo();
 }
 
 
